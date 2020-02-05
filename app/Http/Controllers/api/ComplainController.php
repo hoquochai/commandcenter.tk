@@ -13,33 +13,48 @@ use App\models\Department;
 use App\models\Complain;
 use App\models\AccountType;
 use App\models\SeriousProblemType;
+
 class ComplainController extends Controller
 {
     public $successStatus = 200;
-    public function index(){
+
+    public function index(Request $request)
+    {
         $user = Auth::user();
-        $complains = Complain::where('hospitals_id',$user->hospitals_id)->get();
-        return response()->json(['data'=> $complains], $this->successStatus);
+        $searchData = $request->only(['key_word', 'from_date', 'to_date']);
+        $query = Complain::where('hospitals_id', $user->hospitals_id);
+
+        if ($request->has('pageSize')) {
+            $limit = $request->get('pageSize');
+        } else {
+            $limit = config('settings.limit_pagination');
+        }
+
+        $complains = $this->search($searchData, $query, 'date_complain')->orderBy('id', 'DESC')->paginate($limit);
+        return response()->json(['data' => $complains], $this->successStatus);
     }
 
-    public function show($id){
+    public function show($id)
+    {
         // return "OK";
         $complains = Complain::find($id);
 
-        if($complains['frequence'] == 1){
+        if ($complains['frequence'] == 1) {
             $complains['frequence'] = "Hàng ngày";
-        }else if($complains['frequence'] == 2){
+        } else if ($complains['frequence'] == 2) {
             $complains['frequence'] = "Hàng tuần";
-        }else{
+        } else {
             $complains['frequence'] = "Hàng tháng";
         }
 
         // Loại báo cáo
-        $complains['report_types_id']= $complains->ReportType->name;
+        $complains['report_types_id'] = $complains->ReportType->name;
         // dd($complains); exit();
-        return response()->json(['complains'=> $complains], $this->successStatus);
+        return response()->json(['complains' => $complains], $this->successStatus);
     }
-    public function create(){
+
+    public function create()
+    {
         $user = Auth::user();
         $data['departments'] = Department::where('hospitals_id', $user->hospitals_id)->first();
         $data['ReportTypes'] = ReportType::all();
@@ -57,9 +72,11 @@ class ComplainController extends Controller
         $emailTo = User::where('parent_id', 0)->where('hospitals_id', $user['hospitals_id'])->first();
         // dd($user); exit();
         $data['receiver'] = $emailTo;
-        return response()->json(['success'=> $data], $this->successStatus);
+        return response()->json(['success' => $data], $this->successStatus);
     }
-    public function store(Request $request){
+
+    public function store(Request $request)
+    {
         // Get email
         $user = Auth::user();
         // code cũ
@@ -84,43 +101,43 @@ class ComplainController extends Controller
         $complainant->name = $request->name;
         $complainant->case_number = $request->case_number;
         $complainant->birthday = $request->birthday;
-        $complainant->gender= $request->gender;
-        $complainant->departments_id= $request->patient_department_id;
-        $complainant->address= $request->address;
-        $complainant->date_of_issue= $request->date_of_issue;
-        $complainant->place_of_issue= $request->place_of_issue;
+        $complainant->gender = $request->gender;
+        $complainant->departments_id = $request->patient_department_id;
+        $complainant->address = $request->address;
+        $complainant->date_of_issue = $request->date_of_issue;
+        $complainant->place_of_issue = $request->place_of_issue;
         $complainant->save();
         $complainants_id = $complainant->id;
-        $request->merge(['complainants_id' =>  $complainants_id]);
+        $request->merge(['complainants_id' => $complainants_id]);
         if ($request->hasFile('attachments')) {
             $filename = $request->file('attachments')->getClientOriginalName();
-            $path = $request->file('attachments')->move("public/uploads",$filename);
-            $file = url('public/uploads'.'/'.$filename);
+            $path = $request->file('attachments')->move("public/uploads", $filename);
+            $file = url('public/uploads' . '/' . $filename);
             $request->merge(['file' => $file]);
-            $complains= Complain::create($request->except('name', 'passport','birthday','gender','address','phone','date_of_issue','place_of_issue'));
-            if($complains){
-                $data = array('name'=>'Xin chào!', 'body' => 'Bạn vừa nhận được 01 email mới');
+            $complains = Complain::create($request->except('name', 'passport', 'birthday', 'gender', 'address', 'phone', 'date_of_issue', 'place_of_issue'));
+            if ($complains) {
+                $data = array('name' => 'Xin chào!', 'body' => 'Bạn vừa nhận được 01 email mới');
                 // dd($mailToArray);exit();
-                Mail::send('emails.mail', $data, function($message) use($array) {
+                Mail::send('emails.mail', $data, function ($message) use ($array) {
                     $message->to($array['mailTo'])
-                    ->subject('BÁO CÁO KHẨN CẤP');
-                    $message->from($array['mailFrom'],$array['title']);
-                });
-                return response(['success'=>'Created successfull','request'=> $request->all()], $this->successStatus);
-            }
-
-        }else{
-            $file = url('public/uploads/no-image.png');
-            $request->merge(['file' => $file]);
-            $complains= Complain::create($request->except('name', 'passport','birthday','gender','address','phone','date_of_issue','place_of_issue'));
-            if($complains){
-                $data = array('name'=>'Xin chào!', 'body' => 'Bạn vừa nhận được 01 email mới');
-                Mail::send('emails.mail', $data, function($message) use($array) {
-                    $message->to($array['mailTo'])
-                    ->subject('BÁO CÁO KHẨN CẤP');
+                        ->subject('BÁO CÁO KHẨN CẤP');
                     $message->from($array['mailFrom'], $array['title']);
                 });
-                return response(['success'=>'Created successfull','request'=> $request->all()],$this->successStatus);
+                return response(['success' => 'Created successfull', 'request' => $request->all()], $this->successStatus);
+            }
+
+        } else {
+            $file = url('public/uploads/no-image.png');
+            $request->merge(['file' => $file]);
+            $complains = Complain::create($request->except('name', 'passport', 'birthday', 'gender', 'address', 'phone', 'date_of_issue', 'place_of_issue'));
+            if ($complains) {
+                $data = array('name' => 'Xin chào!', 'body' => 'Bạn vừa nhận được 01 email mới');
+                Mail::send('emails.mail', $data, function ($message) use ($array) {
+                    $message->to($array['mailTo'])
+                        ->subject('BÁO CÁO KHẨN CẤP');
+                    $message->from($array['mailFrom'], $array['title']);
+                });
+                return response(['success' => 'Created successfull', 'request' => $request->all()], $this->successStatus);
             }
         }
     }
