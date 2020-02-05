@@ -27,8 +27,8 @@ class CreateUrgentReportsTable extends Migration
             $table->integer('departments_id')->unsigned();
             $table->foreign('departments_id')->references('id')->on('departments')->onDelete('cascade');
             $table->string('serious_problem_types_id');
-            // $table->integer('serious_problem_types_id')->unsigned();
-            // $table->foreign('serious_problem_types_id')->references('id')->on('serious_problem_types')->onDelete('cascade');
+            // $table->integer('areas_id')->unsigned();
+            // $table->foreign('areas_id')->references('id')->on('areas')->onDelete('cascade');
             $table->bigInteger('users_id')->unsigned();
             $table->foreign('users_id')->references('id')->on('users')->onDelete('cascade');
             $table->bigInteger('received_id')->unsigned();

@@ -29,6 +29,7 @@ class HospitalsTableSeeder extends Seeder
                 ['id'=>12, "code" =>"RANGHAMMATTW", "name"=>"BV Răng Hàm Mặt TW", "logo"=>"public/images/logo/rang-ham-mat-tw.jpg", "districts_id"=>'002', "provinces_id"=>'01', "wards_id"=>'00076',"address"=>"40 Tràng Thi","depts_id"=>1 ],
                 ['id'=>13, "code" =>"TUETINH", "name"=>"BV Tuệ Tĩnh", "logo"=>"public/images/logo/tue-tinh.jpg", "districts_id"=>'268', "provinces_id"=>'01', "wards_id"=>'09541',"address"=>"2 Đường Trần Phú","depts_id"=>1 ],
                 ['id'=>14, "code" =>"TAMTHANTW", "name"=>"BV Tâm thần Trung Ương", "logo"=>"public/images/logo/tam-than-tw.jpg", "districts_id"=>'279', "provinces_id"=>'01', "wards_id"=>'10198',"address"=>"Xã Hòa Bình","depts_id"=>1 ],
+                ['id'=>15, "code" =>"BV110", "name"=>"BV Quân Y 110", "logo"=>"public/images/logo/bv-110.png", "districts_id"=>'279', "provinces_id"=>'01', "wards_id"=>'10198',"address"=>"Phường Thị Cầu","depts_id"=>1 ],
             ]
         );
     }

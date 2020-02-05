@@ -17,7 +17,9 @@ class CreateDepartmentsTable extends Migration
             $table->increments('id');
             $table->string('name');
             $table->integer('hospitals_id')->unsigned();
-            $table->foreign('hospitals_id')->references('id')->on('hospitals')->onDelete('cascade');
+            $table->foreign('hospitals_id')->references('id')->on('hospitals')->onDelete('cascade'); 
+            $table->integer('areas_id')->unsigned();
+            $table->foreign('areas_id')->references('id')->on('areas')->onDelete('cascade');
         });
     }
 

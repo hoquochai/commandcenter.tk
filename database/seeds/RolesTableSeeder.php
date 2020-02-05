@@ -13,25 +13,34 @@ class RolesTableSeeder extends Seeder
     {
         $hospital_director = Role::create([
             'name' => 'Giám đốc viện', 
-            'slug' => 'hospital',
+            'slug' => 'director',
             'permission' => [
+                'urgent_reports.index' => true,
+                'urgent_reports.show' => true,
+            ]
+        ]);
+        $urgent = Role::create([
+            'name' => 'Khoa cấp cứu', 
+            'slug' => 'urgent',
+            'permission' => [
+                'urgent_reports.index' => true,
+                'urgent_reports.show' => true,
                 'urgent_reports.create' => true,
-                'urgent_reports.edit' => true,
-                'urgent_reports.update' => true
+                'complains.index' => true,
+                'complains.show' => true,
+                'complains.create' => true,
             ]
         ]);
-        $depts_director = Role::create([
-            'name' => 'Giám đốc sở', 
-            'slug' => 'depts',
+        $general= Role::create([ 
+            'name' => 'Phòng tổng hợp', 
+            'slug' => 'general',
             'permission' => [
-                'urgent_reports.view' => true,
-            ]
-        ]);
-        $minister= Role::create([ 
-            'name' => 'Bộ trưởng', 
-            'slug' => 'minister',
-            'permission' => [
-                'urgent_reports.view' => true,
+                'urgent_reports.index' => true,
+                'urgent_reports.show' => true, 
+                'urgent_reports.create' => true, 
+                'complains.index' => true,
+                'complains.show' => true,
+                'complains.create' => true,
             ]
         ]);
     }

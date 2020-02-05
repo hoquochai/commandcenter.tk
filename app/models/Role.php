@@ -21,17 +21,17 @@ class Role extends Model
 
     }
 
-    public function hasAccess(array $permissions) : bool
+    public function hasAccess(array $permission) : bool
     {
-        foreach ($permissions as $permission) {
-            if ($this->hasPermission($permission))
+        foreach ($permission as $per) {
+            if ($this->hasPermission($per))
                 return true;
         }
         return false;
     }
 
-    private function hasPermission(string $permission) : bool
+    private function hasPermission(string $per) : bool
     {
-        return $this->permissions[$permission] ?? false;
+        return $this->permission[$per] ?? false;
     }
 }

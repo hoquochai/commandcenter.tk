@@ -17,7 +17,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'password','hospital_id','account_types_id','status','address','departments_id','positions_id'
+        'name', 'email', 'password','hospitals_id','account_types_id','status','address','departments_id','positions_id'
     ];
 
     /**
@@ -39,17 +39,17 @@ class User extends Authenticatable
     ];
     public function roles()
     {
-        return $this->belongsToMany(Role::class, 'roles_users',"users_id", "roles_id");
+        return $this->belongsToMany(\App\models\Role::class, 'roles_users',"users_id", "roles_id");
     }
 
     /**
      * Checks if User has access to $permissions.
      */
-    public function hasAccess(array $permissions) : bool
+    public function hasAccess(array $permission) : bool
     {
         // check if the permission is available in any role
         foreach ($this->roles as $role) {
-            if($role->hasAccess($permissions)) {
+            if($role->hasAccess($permission)) {
                 return true;
             }
         }

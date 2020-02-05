@@ -10,6 +10,7 @@ use Validator;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -52,11 +53,17 @@ class UserController extends Controller
         $email = trim($request->email);
         $input['password'] = bcrypt($input['password']);
         $users = User::all();
-        if($request->account_types == 2 || $request->account_types ==3){
+        // if($request->account_types == 2 || $request->account_types ==3){
+        //     $parent_id = 0;
+        // }else{
+        //     $hospital = Hospital::where('hospital_id', $request->hospitals_id)->get();
+        //     $parent_id = $hospital['depts_id'];
+        // }
+        if($request->account_types == 1){
             $parent_id = 0;
         }else{
-            $hospital = Hospital::where('hospital_id', $request->hospitals_id)->get();
-            $parent_id = $hospital['depts_id'];
+            // $hospital = Hospital::where('hospital_id', $request->hospitals_id)->get();
+            $parent_id = 1;
         }
         if($users->count()!=0)
         {
@@ -122,27 +129,73 @@ class UserController extends Controller
 
     }
     public function edit($id){
-        $user = User::find($id);
-        if($user){
+        $data['user'] = User::find($id);
+        $data['hospital'] = Hospital::all();
+        $data['position'] = Position::all();
+        if($data['user']){
             return response()->json(['data'=> 'Data null'], 401);
         }else{
-            return response()->json(['data'=> $user], $this->successStatus);
+            return response()->json(['data'=> $data], $this->successStatus);
         }
     }
     public function update(Request $request, $id){
         $user = User::find($id);
-        if ($request->hasFile('file')) {
-            $filename = $request->file->getClientOriginalName();
+        if($request->account_types == 2 || $request->account_types ==3){
+            $parent_id = 0;
+        }else{
+            $hospital = Hospital::where('hospital_id', $request->hospitals_id)->get();
+            $parent_id = $hospital['depts_id'];
+        }
+        if ($request->hasFile('image')) {
+            $filename = $request->image->getClientOriginalName();
             $logo = $request->image->getClientOriginalName();
             $path = $request->image->move("uploads",$logo);
             $logoUrl = url('uploads'.'/'.$logo);
-            $request->merge(['image' => $logo]);
-            $user = User::update($request->all());
+            $request->merge(['image' => $logoUrl]);
+            $user->name = $request->name;
+            $user->image = $request->image;
+            $user->parent_id = $parent_id;
+            $user->email = $request->email;
+            $user->password = $request->password;
+            $user->hospitals_id = $request->hospitals_id;
+            $user->positions_id = $request->positions_id;
+            $user->departments_id = $request->departments_id;
+            $user->account_types_id = $request->account_types_id;
+            $user->status = $request->status;
+            $user->save();
+            // $user = User::update($request->all());
             return response()->json(['success'=> "Updated Successfull"], $this->successStatus);
        }else{
-            $input= $request->only(['name','email', 'hospitals_id','positions_id','account_types_id','departments_id','status','password']);
-            $user = User::update($input);
+            $user->name = $request->name;
+            $user->parent_id = $parent_id;
+            $user->email = $request->email;
+            $user->password = $request->password;
+            $user->hospitals_id = $request->hospitals_id;
+            $user->positions_id = $request->positions_id;
+            $user->departments_id = $request->departments_id;
+            $user->account_types_id = $request->account_types_id;
+            $user->status = $request->status;
+            $user->save();
             return response()->json(['success'=> "Updated Successfull"], $this->successStatus);
        }
+    }
+    public function getChangePassword(){
+        $user= Auth::user();
+        return response()->json(['success'=> $user], $this->successStatus);
+    }
+    public function postChangePassword(Request $request){
+        $user = Auth::user();
+           $validator = Validator::make($request->all(), [
+            'old_password' => 'required',
+            'new_password' => 'required',
+            'c_password' => 'required | same:new_password',
+        ]);
+        if (!Hash::check($request['old_password'], Auth::user()->password)) {
+              return response()->json(['error' => ['The old password does not match'] ]);
+        }else{
+            $user->password = bcrypt($request->new_password);
+            $user->save();
+            return response()->json(['success'=> "Changed Password Successfull"], $this->successStatus);
+        }
     }
 }

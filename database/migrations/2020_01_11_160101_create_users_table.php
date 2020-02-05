@@ -17,7 +17,7 @@ class CreateUsersTable extends Migration
             $table->bigIncrements('id');
             $table->string('name');
             $table->string('email')->unique();
-            // $table->bigInteger('parent_id');
+            $table->bigInteger('parent_id');
             $table->integer('hospitals_id')->nullable();
             $table->integer('positions_id')->unsigned();
             $table->foreign('positions_id')->references('id')->on('positions')->onDelete('cascade');

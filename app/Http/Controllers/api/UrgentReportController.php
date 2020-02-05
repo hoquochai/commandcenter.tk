@@ -16,10 +16,12 @@ class UrgentReportController extends Controller
 {
     public $successStatus = 200;
     public function index(){
-            $urgent_reports = UrgentReport::all();
+            $user = Auth::user();
+            $urgent_reports = UrgentReport::where('hospitals_id', $user->hospitals_id)->get();
             return response()->json(['data'=> $urgent_reports], $this->successStatus);
     }
-    public function show($id){
+    public function show(UrgentReport $urgent_reports, $id){
+        // return "OK"; exit();
         $urgent_reports = UrgentReport::find($id);
             // serious_problem_types
             $arr = explode(',',$urgent_reports['serious_problem_types_id']);
@@ -93,69 +95,83 @@ class UrgentReportController extends Controller
     }
     public function create(){
         $user = Auth::user();
-        $account_types = AccountType::where('code','BYT')->first();
-        $email_BTY = User::where('account_types_id', $account_types['id'])->first();
         $data['departments'] = Department::where('hospitals_id', $user->hospitals_id)->first();
         $data['ReportTypes'] = ReportType::all();
         $data['SeriousProblemTypes'] = SeriousProblemType::all();
-        $receiver = array();
-        $receiver[] = $email_BTY;
-        if(isset($user['parent_id'])){
-            $user_dept = User::where('account_types_id', $user['parent_id'])->first();
-            $receiver[] = $user_dept;
-        }
-        $data['receiver'] = $receiver;
+        // MailTo cũ
+        // $account_types = AccountType::where('code','BYT')->first();
+        // $email_BTY = User::where('account_types_id', $account_types['id'])->first();
+        //  $receiver[] = $email_BTY;
+        // if(isset($user['parent_id'])){
+        //     $user_dept = User::where('account_types_id', $user['parent_id'])->first();
+        //     $receiver[] = $user_dept;
+        // }
+        // $data['receiver'] = $receiver;
+        // MailTo mới
+        $emailTo = User::where('parent_id', 0)->where('hospitals_id', $user['hospitals_id'])->first();
+        // dd($user); exit();
+        $data['receiver'] = $emailTo;
         return response()->json(['success'=> $data], $this->successStatus);
     }
     public function store(Request $request){
         // Get email
         $user = Auth::user();
-        $account_types = AccountType::where('code','BYT')->first();
-        $email_BTY = User::where('account_types_id', $account_types['id'])->first();
-        $parent_id = $user['parent_id'];
-        $receiver = array();
-        if(isset($user['parent_id'])){
-            $user_dept = User::where('account_types_id', $user['parent_id'])->first();
-            $mailTo = $user_dept['email'].','.$email_BTY['email'];
-        }
-        
-        $mailToArray = explode(',', $mailTo);
+        // code cũ
+        // $account_types = AccountType::where('code','BYT')->first();
+        // $email_BTY = User::where('account_types_id', $account_types['id'])->first();
+        // $parent_id = $user['parent_id'];
+        // $receiver = array();
+        // if(isset($user['parent_id'])){
+        //     $user_dept = User::where('account_types_id', $user['parent_id'])->first();
+        //     $mailTo = $user_dept['email'].','.$email_BTY['email'];
+        // }
+        // Code mới;
+        $email_BTY = User::where('parent_id', 0)->where('hospitals_id', $user['hospitals_id'])->first();
+        // ------
+        $mailTo = $email_BTY['email'];
         $mailFrom = $user['email'];
+        $array['mailTo'] = $mailTo;
+        $array['mailFrom'] = $mailFrom;
+        $array['title'] = $request->title;
         // Patient Table
         $patients = new Patient;
         $patients->name = $request->name;
         $patients->case_number = $request->case_number;
         $patients->birthday = $request->birthday;
         $patients->gender= $request->gender;
-        $patients->departments_id= $request->patient_department_id;
+        $patients->departments_id= $request->patient_departments_id;
         $patients->save();
         $patients_id = $patients->id;
         $request->merge(['patients_id' =>  $patients_id]);
+        $request->merge(['users_id'=> $user['id']]);
+        $request->merge(['received_id'=> $email_BTY['id']]);
         if ($request->hasFile('attachments')) {
             $filename = $request->file('attachments')->getClientOriginalName();
-            $path = $request->file('attachments')->move("uploads",$filename);
-            $file = url('uploads'.'/'.$filename);
+            $path = $request->file('attachments')->move("public/uploads",$filename);
+            $file = url('public/uploads'.'/'.$filename);
             $request->merge(['file' => $file]);
             $urgent_reports= UrgentReport::create($request->except('name', 'case_number','birthday','gender','patient_department_id'));
             if($urgent_reports){
                 $data = array('name'=>'Xin chào!', 'body' => 'Bạn vừa nhận được 01 email mới');
                 // dd($mailToArray);exit();
-                Mail::send('emails.mail', $data, function($message) use($mailToArray) {
-                    $message->to($mailToArray)
+                Mail::send('emails.mail', $data, function($message) use($array) {
+                    $message->to($array['mailTo'])
                     ->subject('BÁO CÁO KHẨN CẤP');
-                    $message->from('huyitbkap@gmail.com','Test Email');
+                    $message->from($array['mailFrom'],$array['title']);
                 });
                 return response(['success'=>'Created successfull','request'=> $request->all()], $this->successStatus);
             }
 
         }else{
-            $urgent_reports= UrgentReport::create($request->except('file','name', 'case_number','birthday','gender','patient_department_id','patient_hospital_id'));
+            $file = url('public/uploads/no-image.png');
+            $request->merge(['file' => $file]);
+            $urgent_reports= UrgentReport::create($request->except('name', 'case_number','birthday','gender','patient_department_id','patient_hospital_id'));
             if($urgent_reports){
                 $data = array('name'=>'Xin chào!', 'body' => 'Bạn vừa nhận được 01 email mới');
-                Mail::send('emails.mail', $data, function($message) use($mailToArray) {
-                    $message->to($mailToArray)
+                Mail::send('emails.mail', $data, function($message) use($array) {
+                    $message->to($array['mailTo'])
                     ->subject('BÁO CÁO KHẨN CẤP');
-                    $message->from('huyitbkap@gmail.com','Test Email');
+                    $message->from($array['mailFrom'], $array['title']);
                 });
                 return response(['success'=>'Created successfull','request'=> $request->all()],$this->successStatus);
             }
