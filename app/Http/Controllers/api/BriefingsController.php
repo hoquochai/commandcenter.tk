@@ -12,6 +12,7 @@ class BriefingsController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $hisDepartments = HISDepartment::all();
+        $hisDepartments = HISDepartment::with('hisPatientHistories')->get();
+
     }
 }
