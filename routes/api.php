@@ -96,5 +96,11 @@ Route::group(['middleware' => 'auth:api'], function() {
     Route::resource('Positions', 'api\PositionController')->middleware('cors');    
     // Account Types
     Route::resource('AccountTypes', 'api\AccountTypeController')->middleware('cors');
+
+    // Briefings
+    Route::group(['prefix' => 'Briefings'], function(){
+        Route::get('/', 'api\BriefingsController@index')
+            ->name('index_briefings')->middleware('cors');
+    });
 });
 
