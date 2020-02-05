@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Assaulted extends Model
 {
-	protected $table = "assaulteds";
+	protected $table = "assaulted";
     public $timestamps = false;
     protected $fillable = [
         'title','date_assaulted','frequence','report_types_id','assaulted_staff_id','hospitals_id',

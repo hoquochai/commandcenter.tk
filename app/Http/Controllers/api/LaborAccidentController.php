@@ -13,7 +13,7 @@ use App\models\LaborAccident;
 use App\models\AccountType;
 use App\models\SeriousProblemType;
 
-class LaborAccidentContoller extends Controller
+class LaborAccidentController extends Controller
 {
     public $successStatus = 200;
 
