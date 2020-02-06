@@ -16,9 +16,21 @@ use Mail;
 class DeptQualityController extends Controller
 {
     public $successStatus = 200;
-    public function index(){
-            $dept_qualities = DeptQuality::orderBy('id', 'DESC')->get();
-            return response()->json(['data'=> $dept_qualities], $this->successStatus);
+
+    public function index(Request $request)
+    {
+        $user = Auth::user();
+        $searchData = $request->only(['key_word', 'from_date', 'to_date', 'frequence', 'report_types']);
+        $query = DeptQuality::where('hospitals_id', $user->hospitals_id);
+
+        if ($request->has('pageSize')) {
+            $limit = $request->get('pageSize');
+        } else {
+            $limit = config('settings.limit_pagination');
+        }
+
+        $dept_qualities = $this->handleSearch($searchData, $query, 'date_report')->orderBy('id', 'DESC')->paginate($limit);
+        return response()->json(['data' => $dept_qualities], $this->successStatus);
     }
     public function show($id){
 
