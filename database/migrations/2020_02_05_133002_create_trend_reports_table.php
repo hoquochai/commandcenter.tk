@@ -15,14 +15,9 @@ class CreateTrendReportsTable extends Migration
     {
         Schema::create('trend_reports', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('title');
             $table->string('date_trend_reports');
-            $table->string('frequence');
-            $table->integer('report_types_id')->unsigned();
-            $table->foreign('report_types_id')->references('id')->on('report_types')->onDelete('cascade');
-            $table->integer('hospitals_id')->unsigned();
-            $table->foreign('hospitals_id')->references('id')->on('hospitals')->onDelete('cascade');
-            $table->string('formality');
+            $table->string('date_input');
+            $table->text('result');
             $table->timestamps();
         });
     }
