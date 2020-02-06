@@ -22,6 +22,12 @@ class Controller extends BaseController
         if (isset($searchData['to_date'])) {
             $query->where($dateReportField, '<=', $searchData['to_date']);
         }
+        if (isset($searchData['frequence'])) {
+            $query->where('frequence', $searchData['frequence']);
+        }
+        if (isset($searchData['report_types'])) {
+            $query->where('report_types_id', $searchData['report_types']);
+        }
 
         return $query;
     }

@@ -21,7 +21,7 @@ class ComplainController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $searchData = $request->only(['key_word', 'from_date', 'to_date']);
+        $searchData = $request->only(['key_word', 'from_date', 'to_date', 'frequence', 'report_types']);
         $query = Complain::with('complainant')->where('hospitals_id', $user->hospitals_id);
 
         if ($request->has('pageSize')) {

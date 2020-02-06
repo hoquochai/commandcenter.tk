@@ -20,7 +20,7 @@ class LaborAccidentController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $searchData = $request->only(['key_word', 'from_date', 'to_date']);
+        $searchData = $request->only(['key_word', 'from_date', 'to_date', 'frequence', 'report_types']);
         $query = LaborAccident::where('hospitals_id', $user->hospitals_id);
 
         if ($request->has('pageSize')) {
@@ -29,7 +29,7 @@ class LaborAccidentController extends Controller
             $limit = config('settings.limit_pagination');
         }
 
-        $labor_accidents = $this->handleSearch($searchData, $query, 'date_complain')->orderBy('id', 'DESC')->paginate($limit);
+        $labor_accidents = $this->handleSearch($searchData, $query, 'date_report')->orderBy('id', 'DESC')->paginate($limit);
         return response()->json(['data' => $labor_accidents], $this->successStatus);
     }
 
