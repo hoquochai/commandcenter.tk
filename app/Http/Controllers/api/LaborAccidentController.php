@@ -94,19 +94,6 @@ class LaborAccidentController extends Controller
         $array['mailTo'] = $mailTo;
         $array['mailFrom'] = $mailFrom;
         $array['title'] = $request->title;
-        // Patient Table
-        $labor_accidents = new LaborAccident;
-        $labor_accidents->name = $request->name;
-        $labor_accidents->case_number = $request->case_number;
-        $labor_accidents->birthday = $request->birthday;
-        $labor_accidents->gender = $request->gender;
-        $labor_accidents->departments_id = $request->patient_department_id;
-        $labor_accidents->address = $request->address;
-        $labor_accidents->date_of_issue = $request->date_of_issue;
-        $labor_accidents->place_of_issue = $request->place_of_issue;
-        $labor_accidents->save();
-        $labor_accidents_id = $labor_accidents->id;
-        $request->merge(['complainants_id' => $complainants_id]);
         if ($request->hasFile('attachments')) {
             $filename = $request->file('attachments')->getClientOriginalName();
             $path = $request->file('attachments')->move("public/uploads", $filename);

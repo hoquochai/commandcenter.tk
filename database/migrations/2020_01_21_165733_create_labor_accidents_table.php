@@ -30,7 +30,7 @@ class CreateLaborAccidentsTable extends Migration
             $table->string('number_died_people');
             $table->string('number_serious_people');
             $table->string('totals_salary_fund');
-            $table->string('employer ');
+            $table->string('employer');
             $table->string('details');
             $table->string('damages');
             $table->string('total_fees');

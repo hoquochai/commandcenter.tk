@@ -31,6 +31,15 @@ class ComplainController extends Controller
         }
 
         $complains = $this->search($searchData, $query, 'date_complain')->orderBy('id', 'DESC')->paginate($limit);
+        $complains = Complain::where('hospitals_id',$user->hospitals_id)->orderBy('id', 'DESC')->get();
+        $complainants = Complainant::all();
+        foreach ($complains as $complains_key => $complain) {
+            foreach ($complainants as $complainants_key => $complainant) {
+                if($complains[$complains_key]['complainants_id'] == $complainants[$complainants_key]['id'] ){
+                    $complains[$complains_key]['complainants_id'] = json_encode($complainants[$complainants_key]);
+                }
+            }
+        }
         return response()->json(['data' => $complains], $this->successStatus);
     }
 
@@ -38,15 +47,17 @@ class ComplainController extends Controller
     {
         // return "OK";
         $complains = Complain::find($id);
-
-        if ($complains['frequence'] == 1) {
+        $complainant = Complainant::find($complains['complainants_id']);
+        if($complains['frequence'] == 1){
             $complains['frequence'] = "Hàng ngày";
         } else if ($complains['frequence'] == 2) {
             $complains['frequence'] = "Hàng tuần";
         } else {
             $complains['frequence'] = "Hàng tháng";
         }
-
+        if($complainant){
+           $complains['complainants_id'] = $complainant;
+        }
         // Loại báo cáo
         $complains['report_types_id'] = $complains->ReportType->name;
         // dd($complains); exit();

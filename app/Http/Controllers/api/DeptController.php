@@ -14,7 +14,7 @@ class DeptController extends Controller
 {
     public $successStatus = 200;
     public function index(){
-        $depts = Dept::all();
+        $depts = Dept::orderBy('id', 'DESC')->get();
         return response()->json(['data'=> $depts], $this->successStatus);
     }
     public function show($id){
