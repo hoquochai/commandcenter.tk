@@ -18,7 +18,7 @@ class AssaultedStaffController extends Controller
     public $successStatus = 200;
     public function index(){
         $user = Auth::user();
-        $assaulted = Assaulted::where('hospitals_id',$user->hospitals_id)->get();
+        $assaulted = Assaulted::where('hospitals_id',$user->hospitals_id)->orderBy('id', 'DESC')->get();
         return response()->json(['data'=> $assaulted], $this->successStatus);
     }
 
@@ -82,21 +82,26 @@ class AssaultedStaffController extends Controller
 
         $assaulted_staff = new AssaultedStaff;
         $assaulted_staff->name = $request->name;
-        $assaulted_staff->passports = $request->passports;
+        $assaulted_staff->passport = $request->passports;
         $assaulted_staff->birthday = $request->birthday;
         $assaulted_staff->gender= $request->gender;
         $assaulted_staff->phone= $request->phone;
         $assaulted_staff->address= $request->address;
         $assaulted_staff->departments_id = $request->staff_departments_id;
         $assaulted_staff->hospitals_id = $request->staff_hospitals_id;
+        $assaulted_staff->date_of_issue = $request->date_of_issue;
+        $assaulted_staff->place_of_issue = $request->place_of_issue;
         $assaulted_staff->save();
         $assaulted_staffs_id = $assaulted_staff->id;
-        $request->merge(['assaulted_staffs_id' =>  $assaulted_staffs_id]);
+        // dd($assaulted_staffs_id); exit();
+        $request->merge(['assaulted_staffs_id'=>$assaulted_staffs_id]); //assaulted_staffs_id
+        // dd($request->all()); exit();
         if ($request->hasFile('attachments')) {
-            $filename = $request->attachments->getClientOriginalName();
-            $path = $request->attachments->move("public/uploads",$filename);
+            $filename = $request->file('attachments')->getClientOriginalName();
+            $path = $request->file('attachments')->move("public/uploads",$filename);
             $file = url('public/uploads'.'/'.$filename);
-            $request->merge(['attachments' => $file]);
+            $request->merge(['file' => $file]);
+            // dd($request->all()); exit();
             $assaulted= Assaulted::create($request->except('name', 'passports','birthday','gender','address','phone','staff_departments_id','staff_hospitals_id'));
             if($assaulted){
                 $data = array('name'=>'Xin chào!', 'body' => 'Bạn vừa nhận được 01 email mới');
@@ -105,14 +110,16 @@ class AssaultedStaffController extends Controller
                     $message->to($array['mailTo'])
                     ->subject('BÁO CÁO KHẨN CẤP');
                     $message->from($array['mailFrom'],$array['title']);
-               }); response(['success'=>'Created successfull','request'=> $request->all()], $this->successStatus);
+               }); 
+               return response(['success'=>'Created successfull','request'=> $request->all()], $this->successStatus);
             }else{
                 return response(['error'=>'Cannot created'], 401);
             }
         }else{
         	$file = url('public/uploads/no-image.png');
             $request->merge(['file' => $file]);
-            $assaulted= Complain::create($request->except('name', 'passports','birthday','gender','address','phone','staff_departments_id','staff_hospitals_id'));
+            dd($request->all()); exit();
+            $assaulted= Assaulted::create($request->except('name', 'passports','birthday','gender','address','phone','staff_departments_id','staff_hospitals_id'));
             if($assaulted){
                 $data = array('name'=>'Xin chào!', 'body' => 'Bạn vừa nhận được 01 email mới');
                 Mail::send('emails.mail', $data, function($message) use($array) {

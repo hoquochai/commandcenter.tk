@@ -1,10 +1,11 @@
 <?php
 
 namespace App\Http\Controllers\api;
+
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\models\SeriousProblemType;
-use App\models\UrgentReport;
+use App\models\DeptQuality;
 use App\models\Patient;
 use App\models\ReportType;
 use App\models\Department;
@@ -12,97 +13,85 @@ use App\models\AccountType;
 use App\User;
 use Auth;
 use Mail;
-class UrgentReportController extends Controller
+class DeptQualityController extends Controller
 {
     public $successStatus = 200;
     public function index(){
-            $urgent_reports = UrgentReport::orderBy('id', 'DESC')->get();
-            $patients = Patient::all();
-            foreach ($urgent_reports as $reports_key => $report) {
-                foreach ($patients as $patients_key => $patient) {
-                    if($urgent_reports[$reports_key]['patients_id'] == $patients[$patients_key]['id'] ){
-                        $urgent_reports[$reports_key]['patients_id'] = json_encode($patients[$patients_key]);
-                    }
-                }
-            }
-            return response()->json(['data'=> $urgent_reports], $this->successStatus);
+            $dept_qualitys = DeptQuality::orderBy('id', 'DESC')->get();
+            return response()->json(['data'=> $dept_qualitys], $this->successStatus);
     }
     public function show($id){
-        $urgent_reports = UrgentReport::find($id);
-        $patient = Patient::find($urgent_reports['patients_id']);
+        $dept_quality = DeptQuality::find($id);
             // serious_problem_types
-            $arr = explode(',',$urgent_reports['serious_problem_types_id']);
+            $arr = explode(',',$dept_quality['serious_problem_types_id']);
             // dd($arr); exit();
             foreach($arr as $key1 => $value1){
                 $data[] = SeriousProblemType::where('id', $value1)->first()->toArray();
             }
-            $urgent_reports['serious_problem_types'] = buildTree($data, 0);
+            $dept_quality['serious_problem_types'] = buildTree($data, 0);
             
             // Tần suất báo cáo
-            if($urgent_reports['frequence'] == 1){
-                $urgent_reports['frequence'] = "Hàng ngày";
-            }else if($urgent_reports['frequence'] == 2){
-                $urgent_reports['frequence'] = "Hàng tuần";
+            if($dept_quality['frequence'] == 1){
+                $dept_quality['frequence'] = "Hàng ngày";
+            }else if($dept_quality['frequence'] == 2){
+                $dept_quality['frequence'] = "Hàng tuần";
             }else{
-                $urgent_reports['frequence'] = "Hàng tháng";
+                $dept_quality['frequence'] = "Hàng tháng";
             }
             // Loại báo cáo
-            $urgent_reports['report_types_id']= $urgent_reports->ReportType->name;
+            $dept_quality['report_types_id']= $dept_quality->ReportType->name;
             // Thông báo cho bác sĩ
-            if($urgent_reports['notify_doctor']==1){
-                $urgent_reports['notify_doctor'] = "Có";
-            }else if($urgent_reports['notify_doctor'] == 2){
-                $urgent_reports['notify_doctor'] = "Không";
+            if($dept_quality['notify_doctor']==1){
+                $dept_quality['notify_doctor'] = "Có";
+            }else if($dept_quality['notify_doctor'] == 2){
+                $dept_quality['notify_doctor'] = "Không";
             }else{
-                $urgent_reports['notify_doctor'] = "Không ghi nhận";
+                $dept_quality['notify_doctor'] = "Không ghi nhận";
             }
             // Thông báo cho người nhà bệnh nhân
-            if($urgent_reports['notify_family']==1){
-                $urgent_reports['notify_family'] = "Có";
-            }else if($urgent_reports['notify_family'] == 2){
-                $urgent_reports['notify_family'] = "Không";
+            if($dept_quality['notify_family']==1){
+                $dept_quality['notify_family'] = "Có";
+            }else if($dept_quality['notify_family'] == 2){
+                $dept_quality['notify_family'] = "Không";
             }else{
-                $urgent_reports['notify_family'] = "Không ghi nhận";
+                $dept_quality['notify_family'] = "Không ghi nhận";
             }
             // Thông báo cho người bệnh
-            if($urgent_reports['notify_patient']==1){
-                $urgent_reports['notify_patient'] = "Có";
-            }else if($urgent_reports['notify_patient'] == 2){
-                $urgent_reports['notify_patient'] = "Không";
+            if($dept_quality['notify_patient']==1){
+                $dept_quality['notify_patient'] = "Có";
+            }else if($dept_quality['notify_patient'] == 2){
+                $dept_quality['notify_patient'] = "Không";
             }else{
-                $urgent_reports['notify_patient'] = "Không ghi nhận";
+                $dept_quality['notify_patient'] = "Không ghi nhận";
             }
             // Mức độ nghiêm trọng
-            if($urgent_reports['trouble_level']==1){
-                $urgent_reports['trouble_level'] = "Nặng";
-            }else if($urgent_reports['trouble_level'] == 2){
-                $urgent_reports['trouble_level'] = "Nhẹ";
+            if($dept_quality['trouble_level']==1){
+                $dept_quality['trouble_level'] = "Nặng";
+            }else if($dept_quality['trouble_level'] == 2){
+                $dept_quality['trouble_level'] = "Nhẹ";
             }else{
-                $urgent_reports['trouble_level'] = "Trung bình";
+                $dept_quality['trouble_level'] = "Trung bình";
             }
             // Lưu hồ sơ y tế
-            if($urgent_reports['recorded_medical ']==1){
-                $urgent_reports['recorded_medical '] = "Có";
-            }else if($urgent_reports['recorded_medical '] == 2){
-                $urgent_reports['recorded_medical '] = "Không";
+            if($dept_quality['recorded_medical ']==1){
+                $dept_quality['recorded_medical '] = "Có";
+            }else if($dept_quality['recorded_medical '] == 2){
+                $dept_quality['recorded_medical '] = "Không";
             }else{
-                $urgent_reports['recorded_medical '] = "Không ghi nhận";
+                $dept_quality['recorded_medical '] = "Không ghi nhận";
             }
             // Đối tượng xảy ra sự cố
-            if($urgent_reports['problem_object ']==1){
-                $urgent_reports['problem_object '] = "Người bệnh";
-            }else if($urgent_reports['problem_object '] == 2){
-                $urgent_reports['problem_object '] = "Người nhà";
-            }else if($urgent_reports['problem_object '] == 3){
-                $urgent_reports['problem_object '] = "Nhân viên y tế";
+            if($dept_quality['problem_object ']==1){
+                $dept_quality['problem_object '] = "Người bệnh";
+            }else if($dept_quality['problem_object '] == 2){
+                $dept_quality['problem_object '] = "Người nhà";
+            }else if($dept_quality['problem_object '] == 3){
+                $dept_quality['problem_object '] = "Nhân viên y tế";
             }else{
-                $urgent_reports['problem_object '] = "Trang thiết bị y tế";
+                $dept_quality['problem_object '] = "Trang thiết bị y tế";
             }
-            // get patient
-            if($patient){
-                $urgent_reports['patients_id'] = $patient;
-            }
-            return response()->json(['data'=> $urgent_reports], $this->successStatus);
+           
+            return response()->json(['data'=> $dept_quality], $this->successStatus);
     }
     public function create(){
         // dd($user); exit();
@@ -161,8 +150,8 @@ class UrgentReportController extends Controller
             $path = $request->file('attachments')->move("public/uploads",$filename);
             $file = url('public/uploads'.'/'.$filename);
             $request->merge(['file' => $file]);
-            $urgent_reports= UrgentReport::create($request->except('name', 'case_number','birthday','gender','patient_department_id'));
-            if($urgent_reports){
+            $dept_quality= UrgentReport::create($request->except('name', 'case_number','birthday','gender','patient_department_id'));
+            if($dept_quality){
                 $data = array('name'=>'Xin chào!', 'body' => 'Bạn vừa nhận được 01 email mới');
                 // dd($mailToArray);exit();
                 Mail::send('emails.mail', $data, function($message) use($array) {
@@ -174,8 +163,8 @@ class UrgentReportController extends Controller
             }
 
         }else{
-            $urgent_reports= UrgentReport::create($request->except('file','name', 'case_number','birthday','gender','patient_department_id','patient_hospital_id'));
-            if($urgent_reports){
+            $dept_quality= UrgentReport::create($request->except('file','name', 'case_number','birthday','gender','patient_department_id','patient_hospital_id'));
+            if($dept_quality){
                 $data = array('name'=>'Xin chào!', 'body' => 'Bạn vừa nhận được 01 email mới');
                 Mail::send('emails.mail', $data, function($message) use($mailToArray) {
                     $message->to($array['mailTo'])
@@ -186,18 +175,5 @@ class UrgentReportController extends Controller
             }
         }
 
-    }
-
-     public function search(Request $request){
-        // if(isset($_POST['search'])){
-            $data = UrgentReport::where('frequence',$request->frequence)->where('title','LIKE','%'.$request->title.'%')->where('date_report',$request->date_report)->get();
-                return response()->json(['success'=> $data], $this->successStatus);
-            // if($request->ajax()){
-            //     $data = UrgentReport::where('frequence',$request->frequence)->where('title','LIKE','%'.$request->title.'%')->where('date_report',$request->date_report)->get();
-            //     return response()->json(['success'=> $data], $this->successStatus);
-            // }
-            // else{
-            //     dd('Can not search');
-            // }
     }
 }

@@ -16,9 +16,18 @@ class LaborAccidentContoller extends Controller
 {
     public $successStatus = 200;
     public function index(){
+
         $user = Auth::user();
-        $labor_accidents = LaborAccident::where('hospitals_id',$user->hospitals_id)->get();
-        return response()->json(['data'=> $labor_accidents], $this->successStatus);
+        // dd("ok"); exit();
+        $labor_accidents = LaborAccident::where('hospitals_id',$user->hospitals_id)->orderBy('id', 'DESC')->get();
+        // $labor_accidents = LaborAccident::all();
+        // dd($labor_accidents); exit();
+        if($labor_accidents){
+        	return response()->json(['data'=> $labor_accidents], $this->successStatus);
+        }else{
+        	return response()->json(['data'=> '' ], $this->successStatus);
+        }
+        
     }
 
     public function show($id){
@@ -76,20 +85,7 @@ class LaborAccidentContoller extends Controller
         $mailFrom = $user['email'];
         $array['mailTo'] = $mailTo;
         $array['mailFrom'] = $mailFrom;
-        $array['title'] = $request->title;
-        // Patient Table
-        $labor_accidents = new LaborAccident;
-        $labor_accidents->name = $request->name;
-        $labor_accidents->case_number = $request->case_number;
-        $labor_accidents->birthday = $request->birthday;
-        $labor_accidents->gender= $request->gender;
-        $labor_accidents->departments_id= $request->patient_department_id;
-        $labor_accidents->address= $request->address;
-        $labor_accidents->date_of_issue= $request->date_of_issue;
-        $labor_accidents->place_of_issue= $request->place_of_issue;
-        $labor_accidents->save();
-        $labor_accidents_id = $labor_accidents->id;
-        $request->merge(['complainants_id' =>  $complainants_id]);
+        $array['title'] = $request->title;   
         if ($request->hasFile('attachments')) {
             $filename = $request->file('attachments')->getClientOriginalName();
             $path = $request->file('attachments')->move("public/uploads",$filename);
