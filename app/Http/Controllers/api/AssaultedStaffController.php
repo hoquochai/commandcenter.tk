@@ -30,7 +30,7 @@ class AssaultedStaffController extends Controller
             $limit = config('settings.limit_pagination');
         }
 
-        $assaulted = $this->search($searchData, $query, 'date_assaulted')->orderBy('id', 'DESC')->paginate($limit);
+        $assaulted = $this->handleSearch($searchData, $query, 'date_assaulted')->orderBy('id', 'DESC')->paginate($limit);
         return response()->json(['data' => $assaulted], $this->successStatus);
     }
 

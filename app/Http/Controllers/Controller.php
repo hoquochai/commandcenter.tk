@@ -11,7 +11,7 @@ class Controller extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
-    protected function search($searchData, $query, $dateReportField)
+    protected function handleSearch($searchData, $query, $dateReportField)
     {
         if (isset($searchData['key_word'])) {
             $query->where('title', 'LIKE', '%' .$searchData['key_word'] . '%');

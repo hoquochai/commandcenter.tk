@@ -22,7 +22,7 @@ class ComplainController extends Controller
     {
         $user = Auth::user();
         $searchData = $request->only(['key_word', 'from_date', 'to_date']);
-        $query = Complain::where('hospitals_id', $user->hospitals_id);
+        $query = Complain::with('complainant')->where('hospitals_id', $user->hospitals_id);
 
         if ($request->has('pageSize')) {
             $limit = $request->get('pageSize');
@@ -30,16 +30,8 @@ class ComplainController extends Controller
             $limit = config('settings.limit_pagination');
         }
 
-        $complains = $this->search($searchData, $query, 'date_complain')->orderBy('id', 'DESC')->paginate($limit);
-        $complains = Complain::where('hospitals_id',$user->hospitals_id)->orderBy('id', 'DESC')->get();
-        $complainants = Complainant::all();
-        foreach ($complains as $complains_key => $complain) {
-            foreach ($complainants as $complainants_key => $complainant) {
-                if($complains[$complains_key]['complainants_id'] == $complainants[$complainants_key]['id'] ){
-                    $complains[$complains_key]['complainants_id'] = json_encode($complainants[$complainants_key]);
-                }
-            }
-        }
+        $complains = $this->handleSearch($searchData, $query, 'date_complain')->orderBy('id', 'DESC')->paginate($limit);
+
         return response()->json(['data' => $complains], $this->successStatus);
     }
 

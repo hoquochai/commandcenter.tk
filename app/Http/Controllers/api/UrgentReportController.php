@@ -22,7 +22,7 @@ class UrgentReportController extends Controller
     {
         $user = Auth::user();
         $searchData = $request->only(['key_word', 'from_date', 'to_date']);
-        $query = UrgentReport::where('hospitals_id', $user->hospitals_id);
+        $query = UrgentReport::with('patient')->where('hospitals_id', $user->hospitals_id);
 
         if ($request->has('pageSize')) {
             $limit = $request->get('pageSize');
@@ -30,16 +30,7 @@ class UrgentReportController extends Controller
             $limit = config('settings.limit_pagination');
         }
 
-        $urgent_reports = $this->search($searchData, $query, 'date_report')->orderBy('id', 'DESC')->paginate($limit);
-        $urgent_reports = UrgentReport::orderBy('id', 'DESC')->get();
-        $patients = Patient::all();
-        foreach ($urgent_reports as $reports_key => $report) {
-            foreach ($patients as $patients_key => $patient) {
-                if($urgent_reports[$reports_key]['patients_id'] == $patients[$patients_key]['id'] ){
-                    $urgent_reports[$reports_key]['patients_id'] = json_encode($patients[$patients_key]);
-                }
-            }
-        }
+        $urgent_reports = $this->handleSearch($searchData, $query, 'date_report')->orderBy('id', 'DESC')->paginate($limit);
         return response()->json(['data' => $urgent_reports], $this->successStatus);
     }
     public function show($id){

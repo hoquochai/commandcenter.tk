@@ -29,7 +29,7 @@ class LaborAccidentController extends Controller
             $limit = config('settings.limit_pagination');
         }
 
-        $labor_accidents = $this->search($searchData, $query, 'date_complain')->orderBy('id', 'DESC')->paginate($limit);
+        $labor_accidents = $this->handleSearch($searchData, $query, 'date_complain')->orderBy('id', 'DESC')->paginate($limit);
         return response()->json(['data' => $labor_accidents], $this->successStatus);
     }
 
