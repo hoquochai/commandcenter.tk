@@ -23,6 +23,10 @@ class CreateAssaultedStaffTable extends Migration
             $table->string('birthday');
             $table->integer('gender');
             $table->string('address');
+            $table->integer('departments_id')->unsigned();
+            $table->foreign('departments_id')->references('id')->on('departments')->onDelete('cascade');
+            $table->integer('hospitals_id')->unsigned();
+            $table->foreign('hospitals_id')->references('id')->on('hospitals')->onDelete('cascade');
             $table->timestamps();
         });
     }

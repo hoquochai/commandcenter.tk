@@ -25,7 +25,7 @@ class CreateComplainsTable extends Migration
             $table->integer('hospitals_id')->unsigned();
             $table->foreign('hospitals_id')->references('id')->on('hospitals')->onDelete('cascade');
             $table->string('formality');
-            $table->string('attachments');
+            $table->string('file');
             $table->string('content');
             $table->string('reason');
             $table->string('information_person');

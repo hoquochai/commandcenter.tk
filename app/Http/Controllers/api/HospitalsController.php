@@ -14,7 +14,7 @@ class HospitalsController extends Controller
 {
     public $successStatus = 200;
     public function index(){
-        $hospital = Hospital::all();
+        $hospital = Hospital::orderBy('id', 'DESC')->get();
         return response()->json(['data'=> $hospital], $this->successStatus);
     }
     public function show($id){

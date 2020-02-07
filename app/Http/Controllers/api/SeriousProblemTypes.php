@@ -9,7 +9,7 @@ class SeriousProblemTypes extends Controller
 {
     public $successStatus = 200;
     public function index(){
-        $problem_types = SeriousProblemType::all();
+        $problem_types = SeriousProblemType::orderBy('id', 'DESC')->get();
         $data = buildTree($problem_types, 0);
         return response()->json(['data'=> $data], $this->successStatus);
     }
