@@ -14,9 +14,9 @@ class AddSomeFieldsToTrendReportsTable extends Migration
     public function up()
     {
         Schema::table('trend_reports', function (Blueprint $table) {
-            $table->bigInteger('users_id')->unsigned();
+            $table->bigInteger('users_id')->unsigned()->nullable();
             $table->foreign('users_id')->references('id')->on('users')->onDelete('cascade');
-            $table->bigInteger('received_id')->unsigned();
+            $table->bigInteger('received_id')->unsigned()->nullable();
             $table->foreign('received_id')->references('id')->on('users')->onDelete('cascade');
         });
     }

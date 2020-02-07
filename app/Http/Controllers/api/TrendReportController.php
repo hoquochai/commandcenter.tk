@@ -9,11 +9,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 
 class TrendReportController extends Controller
 {
-    public $successStatus = 200;
-
     /**
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
@@ -29,7 +28,7 @@ class TrendReportController extends Controller
 
             return response()->json(['data'=> $output], $this->successStatus);
         } catch (\Exception $exception) {
-            return response()->json(['data'=> 'Xử lý thất bại'], $exception->getCode());
+            return response()->json(['data'=> 'Get data failure'], $this->exceptionStatus);
         }
     }
 
@@ -85,7 +84,7 @@ class TrendReportController extends Controller
             $user = Auth::user();
 
             if ($user->isRole(User::ROLE_DIRECTOR)) {
-                return response()->json(['data'=> 'User không có quyển truy cập'], $this->successStatus);
+                return response()->json(['data'=> 'User does not have permission to access'], $this->permissionStatus);
             }
 
             $hospitalId = $user->hospitals_id;
@@ -96,27 +95,46 @@ class TrendReportController extends Controller
                 $userReceive = User::where('id', $userReceiveId)->first();
 
                 if (!$userReceive) {
-                    return response()->json(['data'=> 'Người nhận không tồn tại'], $this->successStatus);
+                    return response()->json(['data'=> 'User not found'], $this->exceptionStatus);
                 }
 
                 $output = $this->handleOutput($hospitalId, $dateInput);
                 TrendReport::create([
                     'date_trend_reports' => Carbon::now()->format('yy-m-d'),
                     'date_input' => $dateInput,
-                    'user_id' => $user->id,
+                    'users_id' => $user->id,
                     'received_id' => $userReceiveId,
                     'result' => json_encode($output),
                 ]);
+
+                return response()->json(['data'=> 'Created successfully'], $this->successStatus);
             }
 
-            return response()->json(['data'=> 'Dữ liệu không hợp lệ'], $this->successStatus);
+            return response()->json(['data'=> 'The data is invalid'], $this->validationStatus);
         } catch (\Exception $exception) {
-            return response()->json(['data'=> 'Xử lý thất bại'], $exception->getCode());
+            return response()->json(['data'=> 'Send report failure'], $this->exceptionStatus);
         }
     }
 
+    /**
+     * @param $id
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function show($id)
     {
+        try {
+            $user = Auth::user();
 
+            if (!$user->isRole(User::ROLE_DIRECTOR)) {
+                return response()->json(['data'=> 'User does not have permission to access'], $this->permissionStatus);
+            }
+
+            $trendReport = TrendReport::with('user', 'receiver')->where('id', $id)->first();
+            $trendReport->result = json_decode($trendReport->result);
+
+            return response()->json(['data'=> $trendReport], $this->successStatus);
+        } catch (\Exception $exception) {
+            return response()->json(['data'=> 'Show report failure'], $this->exceptionStatus);
+        }
     }
 }
