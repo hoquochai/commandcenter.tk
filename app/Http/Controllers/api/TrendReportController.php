@@ -18,19 +18,25 @@ class TrendReportController extends Controller
      */
     public function index(Request $request)
     {
-        try {
-            $user = Auth::user();
-            $hospitalId = $user->hospitals_id;
-            $dateInputUrgentReport = $this->handleRequest($request, 'date_urgent_report');
-            $dateInputAssaultedStaff = $this->handleRequest($request, 'date_assaulted_staff');
-            $dateInputComplain = $this->handleRequest($request, 'date_complain');
-            $dateInputLaborAccident = $this->handleRequest($request, 'date_labor_accident');
-            $output = $this->handleOutput($hospitalId, $dateInputUrgentReport, $dateInputAssaultedStaff, $dateInputComplain, $dateInputLaborAccident);
+        $user = Auth::user();
 
-            return response()->json(['data'=> $output], $this->successStatus);
-        } catch (\Exception $exception) {
-            return response()->json(['data'=> 'Get data failure'], $this->exceptionStatus);
+        if ($user->isRole(User::ROLE_DIRECTOR)) {
+            $trendReports = TrendReport::with('user', 'receiver')->get();
+            foreach ($trendReports as $trendReport) {
+                $trendReport->result = json_decode($trendReport->result);
+            }
+
+            return response()->json(['data'=> $trendReports], $this->successStatus);
         }
+
+        $hospitalId = $user->hospitals_id;
+        $dateInputUrgentReport = $this->handleRequest($request, 'date_urgent_report');
+        $dateInputAssaultedStaff = $this->handleRequest($request, 'date_assaulted_staff');
+        $dateInputComplain = $this->handleRequest($request, 'date_complain');
+        $dateInputLaborAccident = $this->handleRequest($request, 'date_labor_accident');
+        $output = $this->handleOutput($hospitalId, $dateInputUrgentReport, $dateInputAssaultedStaff, $dateInputComplain, $dateInputLaborAccident);
+
+        return response()->json(['data'=> $output], $this->successStatus);
     }
 
     /**
@@ -94,46 +100,42 @@ class TrendReportController extends Controller
      */
     public function store(Request $request)
     {
-        try {
-            $user = Auth::user();
+        $user = Auth::user();
 
-            if ($user->isRole(User::ROLE_DIRECTOR)) {
-                return response()->json(['data'=> 'User does not have permission to access'], $this->permissionStatus);
-            }
-
-            $hospitalId = $user->hospitals_id;
-            $userReceiveId = $request->get('received_id');
-
-            if ($userReceiveId) {
-                $userReceive = User::where('id', $userReceiveId)->first();
-
-                if (!$userReceive) {
-                    return response()->json(['data'=> 'User not found'], $this->exceptionStatus);
-                }
-
-                $dateInputUrgentReport = $this->handleRequest($request, 'date_urgent_report');
-                $dateInputAssaultedStaff = $this->handleRequest($request, 'date_assaulted_staff');
-                $dateInputComplain = $this->handleRequest($request, 'date_complain');
-                $dateInputLaborAccident = $this->handleRequest($request, 'date_labor_accident');
-                $output = $this->handleOutput($hospitalId, $dateInputUrgentReport, $dateInputAssaultedStaff, $dateInputComplain, $dateInputLaborAccident);
-                TrendReport::create([
-                    'date_trend_reports' => Carbon::now()->format('yy-m-d'),
-                    'date_urgent_report' => $dateInputUrgentReport,
-                    'date_assaulted_staff' => $dateInputAssaultedStaff,
-                    'date_complain' => $dateInputComplain,
-                    'date_labor_accident' => $dateInputLaborAccident,
-                    'users_id' => $user->id,
-                    'received_id' => $userReceiveId,
-                    'result' => json_encode($output),
-                ]);
-
-                return response()->json(['data'=> 'Created successfully'], $this->successStatus);
-            }
-
-            return response()->json(['data'=> 'The data is invalid'], $this->validationStatus);
-        } catch (\Exception $exception) {
-            return response()->json(['data'=> 'Send report failure'], $this->exceptionStatus);
+        if ($user->isRole(User::ROLE_DIRECTOR)) {
+            return response()->json(['data'=> 'User does not have permission to access'], $this->permissionStatus);
         }
+
+        $hospitalId = $user->hospitals_id;
+        $userReceiveId = $request->get('received_id');
+
+        if ($userReceiveId) {
+            $userReceive = User::where('id', $userReceiveId)->first();
+
+            if (!$userReceive) {
+                return response()->json(['data'=> 'User not found'], $this->exceptionStatus);
+            }
+
+            $dateInputUrgentReport = $this->handleRequest($request, 'date_urgent_report');
+            $dateInputAssaultedStaff = $this->handleRequest($request, 'date_assaulted_staff');
+            $dateInputComplain = $this->handleRequest($request, 'date_complain');
+            $dateInputLaborAccident = $this->handleRequest($request, 'date_labor_accident');
+            $output = $this->handleOutput($hospitalId, $dateInputUrgentReport, $dateInputAssaultedStaff, $dateInputComplain, $dateInputLaborAccident);
+            TrendReport::create([
+                'date_trend_reports' => Carbon::now()->format('yy-m-d'),
+                'date_urgent_report' => $dateInputUrgentReport,
+                'date_assaulted_staff' => $dateInputAssaultedStaff,
+                'date_complain' => $dateInputComplain,
+                'date_labor_accident' => $dateInputLaborAccident,
+                'users_id' => $user->id,
+                'received_id' => $userReceiveId,
+                'result' => json_encode($output),
+            ]);
+
+            return response()->json(['data'=> 'Created successfully'], $this->successStatus);
+        }
+
+        return response()->json(['data'=> 'The data is invalid'], $this->validationStatus);
     }
 
     /**
@@ -142,19 +144,15 @@ class TrendReportController extends Controller
      */
     public function show($id)
     {
-        try {
-            $user = Auth::user();
+        $user = Auth::user();
 
-            if (!$user->isRole(User::ROLE_DIRECTOR)) {
-                return response()->json(['data'=> 'User does not have permission to access'], $this->permissionStatus);
-            }
-
-            $trendReport = TrendReport::with('user', 'receiver')->where('id', $id)->first();
-            $trendReport->result = json_decode($trendReport->result);
-
-            return response()->json(['data'=> $trendReport], $this->successStatus);
-        } catch (\Exception $exception) {
-            return response()->json(['data'=> 'Show report failure'], $this->exceptionStatus);
+        if (!$user->isRole(User::ROLE_DIRECTOR)) {
+            return response()->json(['data'=> 'User does not have permission to access'], $this->permissionStatus);
         }
+
+        $trendReport = TrendReport::with('user', 'receiver')->where('id', $id)->first();
+        $trendReport->result = json_decode($trendReport->result);
+
+        return response()->json(['data'=> $trendReport], $this->successStatus);
     }
 }
