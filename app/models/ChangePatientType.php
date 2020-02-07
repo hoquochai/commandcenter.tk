@@ -9,4 +9,9 @@ class ChangePatientType extends Model
         'department_id',
         'patient_from_hospital_id'
     ];
+
+    public function patient()
+    {
+        return $this->belongsTo(Patient::class);
+    }
 }

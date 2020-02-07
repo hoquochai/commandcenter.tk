@@ -23,4 +23,14 @@ class PatientHistory extends Model
         'transfer_department_date',
         'p_department_id'
     ];
+
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
+    }
+
+    public function pDepartment()
+    {
+        return $this->belongsTo(Department::class, 'p_department_id');
+    }
 }
