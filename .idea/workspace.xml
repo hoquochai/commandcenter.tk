@@ -1,12 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="90a8434d-11a9-444d-96cb-22da2634dce2" name="Default" comment="Api bao cao xu the">
+    <list default="true" id="90a8434d-11a9-444d-96cb-22da2634dce2" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/Http/Controllers/Controller.php" afterPath="$PROJECT_DIR$/app/Http/Controllers/Controller.php" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/Http/Controllers/api/TrendReportController.php" afterPath="$PROJECT_DIR$/app/Http/Controllers/api/TrendReportController.php" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/models/TrendReport.php" afterPath="$PROJECT_DIR$/app/models/TrendReport.php" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/database/migrations/2020_02_07_093241_add_some_fields_to_trend_reports_table.php" afterPath="$PROJECT_DIR$/database/migrations/2020_02_07_093241_add_some_fields_to_trend_reports_table.php" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -34,9 +31,11 @@
       <file leaf-file-name="TrendReportController.php" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/app/Http/Controllers/api/TrendReportController.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="315">
-              <caret line="28" column="44" lean-forward="true" selection-start-line="28" selection-start-column="44" selection-end-line="28" selection-end-column="44" />
-              <folding />
+            <state relative-caret-position="139">
+              <caret line="11" column="0" lean-forward="true" selection-start-line="11" selection-start-column="0" selection-end-line="11" selection-end-column="0" />
+              <folding>
+                <element signature="e#44#57#0#PHP" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -621,12 +620,20 @@
       <workItem from="1580803242922" duration="2044000" />
       <workItem from="1580865835054" duration="405000" />
       <workItem from="1581009705547" duration="14000" />
-      <workItem from="1581072878860" duration="3506000" />
+      <workItem from="1581072878860" duration="3607000" />
     </task>
+    <task id="LOCAL-00001" summary="Add send report and show report">
+      <created>1581083978079</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1581083978079</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="7282000" />
+    <option name="totallyTimeSpent" value="7383000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="23" width="1280" height="734" extended-state="6" />
@@ -684,7 +691,8 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Api bao cao xu the" />
-    <option name="LAST_COMMIT_MESSAGE" value="Api bao cao xu the" />
+    <MESSAGE value="Add send report and show report" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add send report and show report" />
   </component>
   <component name="WindowStateProjectService">
     <state width="233" height="238" key="Git.Branch.Popup" />
@@ -1048,9 +1056,11 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/app/Http/Controllers/api/TrendReportController.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="315">
-          <caret line="28" column="44" lean-forward="true" selection-start-line="28" selection-start-column="44" selection-end-line="28" selection-end-column="44" />
-          <folding />
+        <state relative-caret-position="139">
+          <caret line="11" column="0" lean-forward="true" selection-start-line="11" selection-start-column="0" selection-end-line="11" selection-end-column="0" />
+          <folding>
+            <element signature="e#44#57#0#PHP" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
