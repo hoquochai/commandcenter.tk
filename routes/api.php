@@ -103,4 +103,8 @@ Route::group(['middleware' => 'auth:api'], function() {
             ->name('index_briefings')->middleware('cors');
     });
 });
-
+// Briefings
+Route::group(['prefix' => 'Briefings'], function(){
+    Route::get('/', 'api\BriefingsController@index')
+        ->name('index_briefings')->middleware('cors');
+});

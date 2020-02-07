@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             SeriousProblemTypesTableSeeder::class,
             AccountTypeTableSeeder::class,
             UsersTableSeeder::class,
+            PatientHistoryTableSeeder::class
         ]);
     }
 }

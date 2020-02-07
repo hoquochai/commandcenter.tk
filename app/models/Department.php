@@ -26,30 +26,13 @@ class Department extends Model
     }
 
     /**
-     * Bệnh nhân ngoại trú
-     */
-    public function outPatients()
-    {
-        return $this->hasMany(PatientHistory::class, 'department_id')
-            ->where('is_inpatient', false);
-    }
-
-    /**
-     * BN nội trú
-     */
-    public function boarding()
-    {
-        return $this->hasMany(PatientHistory::class, 'department_id')->where('is_inpatient', true);
-    }
-
-    /**
      * BN cũ
-     * @param boolean $isInpatient
+     *
      * @return HasMany
      */
-    public function oldPatients($isInpatient = false)
+    public function oldPatients()
     {
-        $query = $isInpatient ? $this->boarding() : $this->outPatients();
+        $query = $this->patientHistories();
 
         return $query->where('time_go_in','<', Carbon::now()->format('yy-m-d'))
             ->whereIn('patient_state', [
@@ -63,12 +46,12 @@ class Department extends Model
 
     /**
      * BN vào viện
-     * @param boolean $isInpatient
+     *
      * @return HasMany
      */
-    public function patientsInHospital($isInpatient = false)
+    public function patientsInHospital()
     {
-        $query = $isInpatient ? $this->boarding() : $this->outPatients();
+        $query = $this->patientHistories();
 
         return $query->where('time_go_in', Carbon::now()->format('yy-m-d'))
             ->whereIn('patient_state', [
@@ -78,12 +61,12 @@ class Department extends Model
 
     /**
      * BN ra viện
-     * @param boolean $isInpatient
+     *
      * @return HasMany
      */
-    public function patientsDischargedFromHospital($isInpatient = false)
+    public function patientsDischargedFromHospital()
     {
-        $query = $isInpatient ? $this->boarding() : $this->outPatients();
+        $query = $this->patientHistories();
 
         return $query->whereNotNull('time_go_out')
             ->whereIn('patient_state', [
@@ -94,25 +77,37 @@ class Department extends Model
     }
 
     /**
-     * BN chuyển đến
-     * @param boolean $isInpatient
+     * BN ngoại trú chuyển đến
+     *
      * @return HasMany
      */
-    public function patientTransferredTo($isInpatient = false)
+    public function outPatientTransferredTo()
     {
         return $this->changePatientTypes()
-            ->has($isInpatient ? 'patient.boarding' : 'patient.outPatients')
+            ->has('patient.outPatients')
+            ->whereNotNull('patient_from_hospital_id');
+    }
+
+    /**
+     * BN nội trú chuyển đến
+     *
+     * @return HasMany
+     */
+    public function boardingPatientTransferredTo()
+    {
+        return $this->changePatientTypes()
+            ->has('patient.boarding')
             ->whereNotNull('patient_from_hospital_id');
     }
 
     /**
      * Bn chuyển viện
-     * @param boolean $isInpatient
+     *
      * @return HasMany
      */
-    public function referralPatient($isInpatient = false)
+    public function referralPatient()
     {
-        $query = $isInpatient ? $this->boarding() : $this->outPatients();
+        $query = $this->patientHistories();
 
         return $query->whereIn('patient_state', [
                 PatientHistory::TT_TINH_TAO,
@@ -121,13 +116,16 @@ class Department extends Model
 
     /**
      * Bn chuyển khoa
-     * @param boolean $isInpatient
+     *
      * @return HasMany
      */
-    public function transferDepartment($isInpatient = false)
+    public function transferDepartment()
     {
-        $query = $isInpatient ? $this->boarding() : $this->outPatients();
+        $query = $this->patientHistories();
 
-        return $query->whereNotNull('transfer_department_date');
+        return $query->where(function ($query) {
+            $query->whereNotNull('transfer_department_date')
+                ->orWhere('p_department_id', '!=', 'department_id');
+        });
     }
 }
