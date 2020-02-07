@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class TrendReport extends Model
 {
     protected $fillable = [
-        'id', 'date_trend_reports', 'date_input', 'result', 'users_id', 'received_id'
+        'id', 'date_trend_reports', 'result', 'users_id', 'received_id',
+        'date_urgent_report', 'date_assaulted_staff', 'date_complain', 'date_labor_accident'
     ];
 
     /**

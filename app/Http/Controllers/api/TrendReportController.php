@@ -21,9 +21,11 @@ class TrendReportController extends Controller
         try {
             $user = Auth::user();
             $hospitalId = $user->hospitals_id;
-            $dateInput = $request->has('date') ? $request->get('date') : Carbon::now()->format('yy-m-d');
-
-            $output = $this->handleOutput($hospitalId, $dateInput);
+            $dateInputUrgentReport = $this->handleRequest($request, 'date_urgent_report');
+            $dateInputAssaultedStaff = $this->handleRequest($request, 'date_assaulted_staff');
+            $dateInputComplain = $this->handleRequest($request, 'date_complain');
+            $dateInputLaborAccident = $this->handleRequest($request, 'date_labor_accident');
+            $output = $this->handleOutput($hospitalId, $dateInputUrgentReport, $dateInputAssaultedStaff, $dateInputComplain, $dateInputLaborAccident);
 
             return response()->json(['data'=> $output], $this->successStatus);
         } catch (\Exception $exception) {
@@ -33,17 +35,30 @@ class TrendReportController extends Controller
 
     /**
      * @param $hospitalId
-     * @param $dateInput
+     * @param $dateInputUrgentReport
+     * @param $dateInputAssaultedStaff
+     * @param $dateInputComplain
+     * @param $dateInputLaborAccident
      * @return mixed
      */
-    private function handleOutput($hospitalId, $dateInput)
+    private function handleOutput($hospitalId, $dateInputUrgentReport, $dateInputAssaultedStaff, $dateInputComplain, $dateInputLaborAccident)
     {
-        $output['bao_cao_su_co_y_khoa_nghiem_trong'] = $this->statific('urgent_reports', 'date_report', $hospitalId, $dateInput);
-        $output['bao_cao_nhan_vien_y_te_bi_hanh_hung'] = $this->statific('assaulted', 'date_assaulted', $hospitalId, $dateInput);
-        $output['bao_cao_khieu_nai_khieu_kien'] = $this->statific('complains', 'date_complain', $hospitalId, $dateInput);
-        $output['bao_cao_tai_nan_lao_dong'] = $this->statific('labor_accidents', 'Date_report', $hospitalId, $dateInput);
+        $output['bao_cao_su_co_y_khoa_nghiem_trong'] = $this->statific('urgent_reports', 'date_report', $hospitalId, $dateInputUrgentReport);
+        $output['bao_cao_nhan_vien_y_te_bi_hanh_hung'] = $this->statific('assaulted', 'date_assaulted', $hospitalId, $dateInputAssaultedStaff);
+        $output['bao_cao_khieu_nai_khieu_kien'] = $this->statific('complains', 'date_complain', $hospitalId, $dateInputComplain);
+        $output['bao_cao_tai_nan_lao_dong'] = $this->statific('labor_accidents', 'Date_report', $hospitalId, $dateInputLaborAccident);
 
         return $output;
+    }
+
+    /**
+     * @param Request $request
+     * @param $dateField
+     * @return mixed|string
+     */
+    private function handleRequest(Request $request, $dateField)
+    {
+        return $request->has($dateField) ? $request->get($dateField) : Carbon::now()->format('yy-m-d');
     }
 
 
@@ -87,7 +102,6 @@ class TrendReportController extends Controller
             }
 
             $hospitalId = $user->hospitals_id;
-            $dateInput = $request->has('date') ? $request->get('date') : Carbon::now()->format('yy-m-d');
             $userReceiveId = $request->get('received_id');
 
             if ($userReceiveId) {
@@ -97,10 +111,17 @@ class TrendReportController extends Controller
                     return response()->json(['data'=> 'User not found'], $this->exceptionStatus);
                 }
 
-                $output = $this->handleOutput($hospitalId, $dateInput);
+                $dateInputUrgentReport = $this->handleRequest($request, 'date_urgent_report');
+                $dateInputAssaultedStaff = $this->handleRequest($request, 'date_assaulted_staff');
+                $dateInputComplain = $this->handleRequest($request, 'date_complain');
+                $dateInputLaborAccident = $this->handleRequest($request, 'date_labor_accident');
+                $output = $this->handleOutput($hospitalId, $dateInputUrgentReport, $dateInputAssaultedStaff, $dateInputComplain, $dateInputLaborAccident);
                 TrendReport::create([
                     'date_trend_reports' => Carbon::now()->format('yy-m-d'),
-                    'date_input' => $dateInput,
+                    'date_urgent_report' => $dateInputUrgentReport,
+                    'date_assaulted_staff' => $dateInputAssaultedStaff,
+                    'date_complain' => $dateInputComplain,
+                    'date_labor_accident' => $dateInputLaborAccident,
                     'users_id' => $user->id,
                     'received_id' => $userReceiveId,
                     'result' => json_encode($output),
