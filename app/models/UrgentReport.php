@@ -19,5 +19,9 @@ class UrgentReport extends Model
     {
         return $this->belongsTo('App\models\ReportType', 'report_types_id', 'id');
     }
-    
+
+    public function patient()
+    {
+        return $this->belongsTo(Patient::class, 'patients_id');
+    }
 }

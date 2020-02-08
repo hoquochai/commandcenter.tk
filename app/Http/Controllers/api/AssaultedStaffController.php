@@ -13,33 +13,48 @@ use App\models\Department;
 use App\models\Assaulted;
 use App\models\AccountType;
 use App\models\SeriousProblemType;
+
 class AssaultedStaffController extends Controller
 {
     public $successStatus = 200;
-    public function index(){
+
+    public function index(Request $request)
+    {
         $user = Auth::user();
-        $assaulted = Assaulted::where('hospitals_id',$user->hospitals_id)->orderBy('id', 'DESC')->get();
-        return response()->json(['data'=> $assaulted], $this->successStatus);
+        $searchData = $request->only(['key_word', 'from_date', 'to_date', 'frequence', 'report_types']);
+        $query = Assaulted::where('hospitals_id', $user->hospitals_id);
+
+        if ($request->has('pageSize')) {
+            $limit = $request->get('pageSize');
+        } else {
+            $limit = config('settings.limit_pagination');
+        }
+
+        $assaulted = $this->handleSearch($searchData, $query, 'date_assaulted')->orderBy('id', 'DESC')->paginate($limit);
+        return response()->json(['data' => $assaulted], $this->successStatus);
     }
 
-    public function show($id){
+    public function show($id)
+    {
         // return "OK";
         $assaulted = Assaulted::find($id);
 
-        if($assaulted['frequence'] == 1){
+        if ($assaulted['frequence'] == 1) {
             $assaulted['frequence'] = "Hàng ngày";
-        }else if($assaulted['frequence'] == 2){
+        } else if ($assaulted['frequence'] == 2) {
             $assaulted['frequence'] = "Hàng tuần";
-        }else{
+        } else {
             $assaulted['frequence'] = "Hàng tháng";
         }
 
         // Loại báo cáo
-        $assaulted['report_types_id']= $assaulted->ReportType->name;
+        $assaulted['report_types_id'] = $assaulted->ReportType->name;
         // dd($assaulted); exit();
-        return response()->json(['assaulted'=> $assaulted], $this->successStatus);
+        return response()->json(['assaulted' => $assaulted], $this->successStatus);
     }
-    public function create(){
+
+    public function create()
+    {
         $user = Auth::user();
         $data['departments'] = Department::where('hospitals_id', $user->hospitals_id)->first();
         $data['ReportTypes'] = ReportType::all();
@@ -57,10 +72,12 @@ class AssaultedStaffController extends Controller
         $emailTo = User::where('parent_id', 0)->where('hospitals_id', $user['hospitals_id'])->first();
         // dd($user); exit();
         $data['receiver'] = $emailTo;
-        return response()->json(['success'=> $data], $this->successStatus);
+        return response()->json(['success' => $data], $this->successStatus);
     }
-    public function store(Request $request){
-       $user = Auth::user();
+
+    public function store(Request $request)
+    {
+        $user = Auth::user();
         // code cũ
         // $account_types = AccountType::where('code','BYT')->first();
         // $email_BTY = User::where('account_types_id', $account_types['id'])->first();
@@ -84,9 +101,9 @@ class AssaultedStaffController extends Controller
         $assaulted_staff->name = $request->name;
         $assaulted_staff->passport = $request->passports;
         $assaulted_staff->birthday = $request->birthday;
-        $assaulted_staff->gender= $request->gender;
-        $assaulted_staff->phone= $request->phone;
-        $assaulted_staff->address= $request->address;
+        $assaulted_staff->gender = $request->gender;
+        $assaulted_staff->phone = $request->phone;
+        $assaulted_staff->address = $request->address;
         $assaulted_staff->departments_id = $request->staff_departments_id;
         $assaulted_staff->hospitals_id = $request->staff_hospitals_id;
         $assaulted_staff->date_of_issue = $request->date_of_issue;
@@ -106,17 +123,17 @@ class AssaultedStaffController extends Controller
             if($assaulted){
                 $data = array('name'=>'Xin chào!', 'body' => 'Bạn vừa nhận được 01 email mới');
                 // dd($mailToArray);exit();
-               Mail::send('emails.mail', $data, function($message) use($array) {
+                Mail::send('emails.mail', $data, function ($message) use ($array) {
                     $message->to($array['mailTo'])
                     ->subject('BÁO CÁO KHẨN CẤP');
                     $message->from($array['mailFrom'],$array['title']);
-               }); 
+               });
                return response(['success'=>'Created successfull','request'=> $request->all()], $this->successStatus);
             }else{
                 return response(['error'=>'Cannot created'], 401);
             }
-        }else{
-        	$file = url('public/uploads/no-image.png');
+        } else {
+            $file = url('public/uploads/no-image.png');
             $request->merge(['file' => $file]);
             dd($request->all()); exit();
             $assaulted= Assaulted::create($request->except('name', 'passports','birthday','gender','address','phone','staff_departments_id','staff_hospitals_id'));
@@ -124,10 +141,10 @@ class AssaultedStaffController extends Controller
                 $data = array('name'=>'Xin chào!', 'body' => 'Bạn vừa nhận được 01 email mới');
                 Mail::send('emails.mail', $data, function($message) use($array) {
                     $message->to($array['mailTo'])
-                    ->subject('BÁO CÁO KHẨN CẤP');
+                        ->subject('BÁO CÁO KHẨN CẤP');
                     $message->from($array['mailFrom'], $array['title']);
                 });
-                return response(['success'=>'Created successfull','request'=> $request->all()],$this->successStatus);
+                return response(['success' => 'Created successfull', 'request' => $request->all()], $this->successStatus);
             }
         }
     }
