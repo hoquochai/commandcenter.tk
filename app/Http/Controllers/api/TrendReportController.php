@@ -173,19 +173,39 @@ class TrendReportController extends Controller
 
     /**
      * @param $id
+     * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function show($id)
+    public function show($id, Request $request)
     {
         $user = Auth::user();
+        $hospitalId = $user->hospitals_id;
 
         if (!$user->isRole(User::ROLE_DIRECTOR)) {
             return response()->json(['data'=> 'User does not have permission to access'], $this->permissionStatus);
         }
 
         $trendReport = TrendReport::with('user', 'receiver', 'hospital', 'reportType')->where('id', $id)->first();
+
+        if (!$trendReport) {
+            return response()->json(['data'=> 'Report not found'], $this->exceptionStatus);
+        }
+
         $trendReport->result = json_decode($trendReport->result);
         $trendReport->frequence = $trendReport->getFrequence();
+
+        if ($request->has('date_urgent_report')) {
+            $trendReport->result->bao_cao_su_co_y_khoa_nghiem_trong = $this->statific('urgent_reports', 'date_report', $hospitalId, $request->get('date_urgent_report'));
+        }
+        if ($request->has('date_assaulted_staff')) {
+            $trendReport->result->bao_cao_nhan_vien_y_te_bi_hanh_hung = $this->statific('assaulted', 'date_assaulted', $hospitalId, $request->get('date_assaulted_staff'));
+        }
+        if ($request->has('date_complain')) {
+            $trendReport->result->bao_cao_khieu_nai_khieu_kien = $this->statific('complains', 'date_complain', $hospitalId, $request->get('date_complain'));
+        }
+        if ($request->has('date_labor_accident')) {
+            $trendReport->result->bao_cao_tai_nan_lao_dong = $this->statific('labor_accidents', 'Date_report', $hospitalId, $request->get('date_labor_accident'));
+        }
 
         return response()->json(['data'=> $trendReport], $this->successStatus);
     }
