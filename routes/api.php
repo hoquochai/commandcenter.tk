@@ -120,5 +120,15 @@ Route::group(['middleware' => 'auth:api'], function() {
     Route::resource('Positions', 'api\PositionController')->middleware('cors');    
     // Account Types
     Route::resource('AccountTypes', 'api\AccountTypeController')->middleware('cors');
+
+    //Trend reports
+    Route::group(['prefix' => 'TrendReports'], function(){
+        Route::get('/', 'api\TrendReportController@index')
+            ->name('index_trend_report')->middleware('cors');
+        Route::post('/create', 'api\TrendReportController@store')
+            ->name('store_trend_report')->middleware('cors');
+        Route::get('/show/{id}', 'api\TrendReportController@show')
+            ->name('show_trend_report')->middleware('cors');
+    });
 });
 
