@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\api;
+
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\models\SeriousProblemType;
@@ -12,20 +13,25 @@ use App\models\AccountType;
 use App\User;
 use Auth;
 use Mail;
+
 class UrgentReportController extends Controller
 {
     public $successStatus = 200;
-    public function index(){
-            $urgent_reports = UrgentReport::orderBy('id', 'DESC')->get();
-            $patients = Patient::all();
-            foreach ($urgent_reports as $reports_key => $report) {
-                foreach ($patients as $patients_key => $patient) {
-                    if($urgent_reports[$reports_key]['patients_id'] == $patients[$patients_key]['id'] ){
-                        $urgent_reports[$reports_key]['patients_id'] = json_encode($patients[$patients_key]);
-                    }
-                }
-            }
-            return response()->json(['data'=> $urgent_reports], $this->successStatus);
+
+    public function index(Request $request)
+    {
+        $user = Auth::user();
+        $searchData = $request->only(['key_word', 'from_date', 'to_date', 'frequence', 'report_types']);
+        $query = UrgentReport::with('patient')->where('hospitals_id', $user->hospitals_id);
+
+        if ($request->has('pageSize')) {
+            $limit = $request->get('pageSize');
+        } else {
+            $limit = config('settings.limit_pagination');
+        }
+
+        $urgent_reports = $this->handleSearch($searchData, $query, 'date_report')->orderBy('id', 'DESC')->paginate($limit);
+        return response()->json(['data' => $urgent_reports], $this->successStatus);
     }
     public function show($id){
         $urgent_reports = UrgentReport::find($id);
@@ -37,7 +43,7 @@ class UrgentReportController extends Controller
                 $data[] = SeriousProblemType::where('id', $value1)->first()->toArray();
             }
             $urgent_reports['serious_problem_types'] = buildTree($data, 0);
-            
+
             // Tần suất báo cáo
             if($urgent_reports['frequence'] == 1){
                 $urgent_reports['frequence'] = "Hàng ngày";
@@ -124,9 +130,11 @@ class UrgentReportController extends Controller
         $emailTo = User::where('parent_id',  $user['parent_id'])->first();
         // dd($user); exit();
         $data['receiver'] = $emailTo;
-        return response()->json(['success'=> $data], $this->successStatus);
+        return response()->json(['success' => $data], $this->successStatus);
     }
-    public function store(Request $request){
+
+    public function store(Request $request)
+    {
         // Get email
         $user = Auth::user();
         // code cũ
@@ -158,19 +166,19 @@ class UrgentReportController extends Controller
         $request->merge(['patients_id' =>  $patients_id]);
         if ($request->hasFile('attachments')) {
             $filename = $request->file('attachments')->getClientOriginalName();
-            $path = $request->file('attachments')->move("public/uploads",$filename);
-            $file = url('public/uploads'.'/'.$filename);
+            $path = $request->file('attachments')->move("public/uploads", $filename);
+            $file = url('public/uploads' . '/' . $filename);
             $request->merge(['file' => $file]);
-            $urgent_reports= UrgentReport::create($request->except('name', 'case_number','birthday','gender','patient_department_id'));
-            if($urgent_reports){
-                $data = array('name'=>'Xin chào!', 'body' => 'Bạn vừa nhận được 01 email mới');
+            $urgent_reports = UrgentReport::create($request->except('name', 'case_number', 'birthday', 'gender', 'patient_department_id'));
+            if ($urgent_reports) {
+                $data = array('name' => 'Xin chào!', 'body' => 'Bạn vừa nhận được 01 email mới');
                 // dd($mailToArray);exit();
-                Mail::send('emails.mail', $data, function($message) use($array) {
+                Mail::send('emails.mail', $data, function ($message) use ($array) {
                     $message->to($array['mailTo'])
-                    ->subject('BÁO CÁO KHẨN CẤP');
-                    $message->from($array['mailFrom'],$array['title']);
+                        ->subject('BÁO CÁO KHẨN CẤP');
+                    $message->from($array['mailFrom'], $array['title']);
                 });
-                return response(['success'=>'Created successfull','request'=> $request->all()], $this->successStatus);
+                return response(['success' => 'Created successfull', 'request' => $request->all()], $this->successStatus);
             }
 
         }else{
@@ -179,10 +187,10 @@ class UrgentReportController extends Controller
                 $data = array('name'=>'Xin chào!', 'body' => 'Bạn vừa nhận được 01 email mới');
                 Mail::send('emails.mail', $data, function($message) use($mailToArray) {
                     $message->to($array['mailTo'])
-                    ->subject('BÁO CÁO KHẨN CẤP');
+                        ->subject('BÁO CÁO KHẨN CẤP');
                     $message->from($array['mailFrom'], $array['title']);
                 });
-                return response(['success'=>'Created successfull','request'=> $request->all()],$this->successStatus);
+                return response(['success' => 'Created successfull', 'request' => $request->all()], $this->successStatus);
             }
         }
 

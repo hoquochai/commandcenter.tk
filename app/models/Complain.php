@@ -18,4 +18,9 @@ class Complain extends Model
     {
         return $this->belongsTo('App\models\ReportType', 'report_types_id', 'id');
     }
+
+    public function complainant()
+    {
+        return $this->belongsTo(Complainant::class, 'complainants_id');
+    }
 }
