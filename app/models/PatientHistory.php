@@ -1,5 +1,6 @@
 <?php
 namespace App\models;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 class PatientHistory extends Model
@@ -32,5 +33,15 @@ class PatientHistory extends Model
     public function pDepartment()
     {
         return $this->belongsTo(Department::class, 'p_department_id');
+    }
+
+    public function scopeOutPatient($query)
+    {
+        return $query->where('is_inpatient', false);
+    }
+
+    public function scopeBoarding($query)
+    {
+        return $query->where('is_inpatient', true);
     }
 }

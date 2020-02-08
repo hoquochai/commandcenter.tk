@@ -45,6 +45,26 @@ class Department extends Model
     }
 
     /**
+     * BN nội trú cũ
+     *
+     * @return mixed
+     */
+    public function bn_noi_tru_cu()
+    {
+        return $this->oldPatients()->boarding();
+    }
+
+    /**
+     * BN ngoai trú cũ
+     *
+     * @return mixed
+     */
+    public function bn_ngoai_tru_cu()
+    {
+        return $this->oldPatients()->outPatient();
+    }
+
+    /**
      * BN vào viện
      *
      * @return HasMany
@@ -57,6 +77,26 @@ class Department extends Model
             ->whereIn('patient_state', [
                 PatientHistory::TT_CHO_NHAP_VIEN,
             ]);
+    }
+
+    /**
+     * BN nội trú vào viện
+     *
+     * @return mixed
+     */
+    public function bn_noi_tru_vao_vien()
+    {
+        return $this->patientsInHospital()->boarding();
+    }
+
+    /**
+     * BN ngoai trú vào viện
+     *
+     * @return mixed
+     */
+    public function bn_ngoai_tru_vao_vien()
+    {
+        return $this->patientsInHospital()->outPatient();
     }
 
     /**
@@ -77,15 +117,23 @@ class Department extends Model
     }
 
     /**
-     * BN ngoại trú chuyển đến
+     * BN nội trú ra viện
      *
-     * @return HasMany
+     * @return mixed
      */
-    public function outPatientTransferredTo()
+    public function bn_noi_tru_ra_vien()
     {
-        return $this->changePatientTypes()
-            ->has('patient.outPatients')
-            ->whereNotNull('patient_from_hospital_id');
+        return $this->patientsDischargedFromHospital()->boarding();
+    }
+
+    /**
+     * BN ngoai trú ra viện
+     *
+     * @return mixed
+     */
+    public function bn_ngoai_tru_ra_vien()
+    {
+        return $this->patientsDischargedFromHospital()->outPatient();
     }
 
     /**
@@ -93,10 +141,22 @@ class Department extends Model
      *
      * @return HasMany
      */
-    public function boardingPatientTransferredTo()
+    public function bn_noi_tru_chuyen_den()
     {
         return $this->changePatientTypes()
             ->has('patient.boarding')
+            ->whereNotNull('patient_from_hospital_id');
+    }
+
+    /**
+     * BN ngoại trú chuyển đến
+     *
+     * @return HasMany
+     */
+    public function bn_ngoai_tru_chuyen_den()
+    {
+        return $this->changePatientTypes()
+            ->has('patient.outPatients')
             ->whereNotNull('patient_from_hospital_id');
     }
 
@@ -115,6 +175,26 @@ class Department extends Model
     }
 
     /**
+     * BN nội trú chuyển viện
+     *
+     * @return mixed
+     */
+    public function bn_noi_tru_chuyen_vien()
+    {
+        return $this->referralPatient()->boarding();
+    }
+
+    /**
+     * BN ngoai trú chuyển viện
+     *
+     * @return mixed
+     */
+    public function bn_ngoai_tru_chuyen_vien()
+    {
+        return $this->referralPatient()->outPatient();
+    }
+
+    /**
      * Bn chuyển khoa
      *
      * @return HasMany
@@ -127,5 +207,25 @@ class Department extends Model
             $query->whereNotNull('transfer_department_date')
                 ->orWhere('p_department_id', '!=', 'department_id');
         });
+    }
+
+    /**
+     * BN nội trú chuyển khoa
+     *
+     * @return mixed
+     */
+    public function bn_noi_tru_chuyen_khoa()
+    {
+        return $this->transferDepartment()->boarding();
+    }
+
+    /**
+     * BN ngoai trú chuyển khoa
+     *
+     * @return mixed
+     */
+    public function bn_ngoai_tru_chuyen_khoa()
+    {
+        return $this->transferDepartment()->outPatient();
     }
 }
