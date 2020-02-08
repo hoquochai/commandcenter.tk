@@ -9,7 +9,7 @@ use Auth;
 use Mail;
 use App\models\ReportType;
 use App\models\Department;
-use App\models\DamagesDisaster;
+use App\models\DamagesDisasters;
 use App\models\AccountType;
 use App\models\SeriousProblemType;
 class DamagesDisastersController extends Controller
@@ -17,14 +17,14 @@ class DamagesDisastersController extends Controller
     public $successStatus = 200;
     public function index(){
         $user = Auth::user();
-        $damages_disaster = DamagesDisaster::where('hospitals_id',$user->hospitals_id)->get();
+        $damages_disaster = DamagesDisasters::where('hospitals_id',$user->hospitals_id)->orderBy('id', 'DESC')->get();
         return response()->json(['data'=> $damages_disaster], $this->successStatus);
     }
 
     public function show($id){
         // return "OK";
-        $damages_disaster = DamagesDisaster::find($id);
-
+        $damages_disaster = DamagesDisasters::find($id);
+        // dd($damages_disaster['frequence']); exit();
         if($damages_disaster['frequence'] == 1){
             $damages_disaster['frequence'] = "Hàng ngày";
         }else if($damages_disaster['frequence'] == 2){
@@ -32,9 +32,10 @@ class DamagesDisastersController extends Controller
         }else{
             $damages_disaster['frequence'] = "Hàng tháng";
         }
-
+        
         // Loại báo cáo
         $damages_disaster['report_types_id']= $damages_disaster->ReportType->name;
+        // dd($damages_disaster['frequence']); exit();
         // dd($damages_disaster); exit();
         return response()->json(['damages_disaster'=> $damages_disaster], $this->successStatus);
     }
@@ -83,7 +84,7 @@ class DamagesDisastersController extends Controller
             $path = $request->file('attachments')->move("public/uploads",$filename);
             $file = url('public/uploads'.'/'.$filename);
             $request->merge(['file' => $file]);
-            $damages_disaster= DamagesDisaster::create($request->all());
+            $damages_disaster= DamagesDisasters::create($request->all());
             if($damages_disaster){
                 $data = array('name'=>'Xin chào!', 'body' => 'Bạn vừa nhận được 01 email mới');
                 // dd($mailToArray);exit();
@@ -98,7 +99,7 @@ class DamagesDisastersController extends Controller
         }else{
             $file = url('public/uploads/no-image.png');
             $request->merge(['file' => $file]);
-            $damages_disaster= DamagesDisaster::create($request->all());
+            $damages_disaster= DamagesDisasters::create($request->all());
             if($damages_disaster){
                 $data = array('name'=>'Xin chào!', 'body' => 'Bạn vừa nhận được 01 email mới');
                 Mail::send('emails.mail', $data, function($message) use($array) {

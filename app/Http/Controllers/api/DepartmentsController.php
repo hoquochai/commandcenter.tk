@@ -8,7 +8,7 @@ class DepartmentsController extends Controller
 {
     public $successStatus = 200;
     public function index(){
-        $departments = Department::all();
+        $departments = Department::orderBy('id', 'DESC')->get();
         $data = buildTree($departments, 0);
         return response()->json(['data'=> $data], $this->successStatus);
     }

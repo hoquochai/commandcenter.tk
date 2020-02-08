@@ -29,7 +29,7 @@ class CreateDamagesDisastersTable extends Migration
             $table->integer('apart_damage');
             $table->integer('under_water_less_1m');
             $table->integer('under_water_1_3m');
-            $table->integer(' under_water_than_3m');
+            $table->integer('under_water_than_3m');
             $table->integer('damages_medicine');
             $table->integer('PCLB');
             $table->integer('ChloraminB');

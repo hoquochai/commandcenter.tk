@@ -11,6 +11,10 @@ class User extends Authenticatable
 {
     use Notifiable, HasApiTokens;
 
+    const ROLE_DIRECTOR = 'director';
+    const ROLE_URGENT = 'urgent';
+    const ROLE_GENERAL = 'general';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -62,5 +66,18 @@ class User extends Authenticatable
     public function inRole(string $roleSlug)
     {
         return $this->roles()->where('slug', $roleSlug)->count() == 1;
+    }
+
+    public function isRole($roleName)
+    {
+        foreach ($this->roles()->get() as $role)
+        {
+            if ($role->slug == $roleName)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

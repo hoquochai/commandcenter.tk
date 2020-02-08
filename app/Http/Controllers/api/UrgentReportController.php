@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\api;
+
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\models\SeriousProblemType;
@@ -12,17 +13,29 @@ use App\models\AccountType;
 use App\User;
 use Auth;
 use Mail;
+
 class UrgentReportController extends Controller
 {
     public $successStatus = 200;
-    public function index(){
-            $user = Auth::user();
-            $urgent_reports = UrgentReport::where('hospitals_id', $user->hospitals_id)->get();
-            return response()->json(['data'=> $urgent_reports], $this->successStatus);
+
+    public function index(Request $request)
+    {
+        $user = Auth::user();
+        $searchData = $request->only(['key_word', 'from_date', 'to_date', 'frequence', 'report_types']);
+        $query = UrgentReport::with('patient')->where('hospitals_id', $user->hospitals_id);
+
+        if ($request->has('pageSize')) {
+            $limit = $request->get('pageSize');
+        } else {
+            $limit = config('settings.limit_pagination');
+        }
+
+        $urgent_reports = $this->handleSearch($searchData, $query, 'date_report')->orderBy('id', 'DESC')->paginate($limit);
+        return response()->json(['data' => $urgent_reports], $this->successStatus);
     }
-    public function show(UrgentReport $urgent_reports, $id){
-        // return "OK"; exit();
+    public function show($id){
         $urgent_reports = UrgentReport::find($id);
+        $patient = Patient::find($urgent_reports['patients_id']);
             // serious_problem_types
             $arr = explode(',',$urgent_reports['serious_problem_types_id']);
             // dd($arr); exit();
@@ -30,7 +43,7 @@ class UrgentReportController extends Controller
                 $data[] = SeriousProblemType::where('id', $value1)->first()->toArray();
             }
             $urgent_reports['serious_problem_types'] = buildTree($data, 0);
-            
+
             // Tần suất báo cáo
             if($urgent_reports['frequence'] == 1){
                 $urgent_reports['frequence'] = "Hàng ngày";
@@ -91,10 +104,16 @@ class UrgentReportController extends Controller
             }else{
                 $urgent_reports['problem_object '] = "Trang thiết bị y tế";
             }
+            // get patient
+            if($patient){
+                $urgent_reports['patients_id'] = $patient;
+            }
             return response()->json(['data'=> $urgent_reports], $this->successStatus);
     }
     public function create(){
+        // dd($user); exit();
         $user = Auth::user();
+
         $data['departments'] = Department::where('hospitals_id', $user->hospitals_id)->first();
         $data['ReportTypes'] = ReportType::all();
         $data['SeriousProblemTypes'] = SeriousProblemType::all();
@@ -108,12 +127,14 @@ class UrgentReportController extends Controller
         // }
         // $data['receiver'] = $receiver;
         // MailTo mới
-        $emailTo = User::where('parent_id', 0)->where('hospitals_id', $user['hospitals_id'])->first();
+        $emailTo = User::where('parent_id',  $user['parent_id'])->first();
         // dd($user); exit();
         $data['receiver'] = $emailTo;
-        return response()->json(['success'=> $data], $this->successStatus);
+        return response()->json(['success' => $data], $this->successStatus);
     }
-    public function store(Request $request){
+
+    public function store(Request $request)
+    {
         // Get email
         $user = Auth::user();
         // code cũ
@@ -126,7 +147,7 @@ class UrgentReportController extends Controller
         //     $mailTo = $user_dept['email'].','.$email_BTY['email'];
         // }
         // Code mới;
-        $email_BTY = User::where('parent_id', 0)->where('hospitals_id', $user['hospitals_id'])->first();
+        $email_BTY = User::where('parent_id', 1)->first();
         // ------
         $mailTo = $email_BTY['email'];
         $mailFrom = $user['email'];
@@ -139,43 +160,52 @@ class UrgentReportController extends Controller
         $patients->case_number = $request->case_number;
         $patients->birthday = $request->birthday;
         $patients->gender= $request->gender;
-        $patients->departments_id= $request->patient_departments_id;
+        $patients->departments_id= $request->patient_department_id;
         $patients->save();
         $patients_id = $patients->id;
         $request->merge(['patients_id' =>  $patients_id]);
-        $request->merge(['users_id'=> $user['id']]);
-        $request->merge(['received_id'=> $email_BTY['id']]);
         if ($request->hasFile('attachments')) {
             $filename = $request->file('attachments')->getClientOriginalName();
-            $path = $request->file('attachments')->move("public/uploads",$filename);
-            $file = url('public/uploads'.'/'.$filename);
+            $path = $request->file('attachments')->move("public/uploads", $filename);
+            $file = url('public/uploads' . '/' . $filename);
             $request->merge(['file' => $file]);
-            $urgent_reports= UrgentReport::create($request->except('name', 'case_number','birthday','gender','patient_department_id'));
-            if($urgent_reports){
-                $data = array('name'=>'Xin chào!', 'body' => 'Bạn vừa nhận được 01 email mới');
+            $urgent_reports = UrgentReport::create($request->except('name', 'case_number', 'birthday', 'gender', 'patient_department_id'));
+            if ($urgent_reports) {
+                $data = array('name' => 'Xin chào!', 'body' => 'Bạn vừa nhận được 01 email mới');
                 // dd($mailToArray);exit();
-                Mail::send('emails.mail', $data, function($message) use($array) {
+                Mail::send('emails.mail', $data, function ($message) use ($array) {
                     $message->to($array['mailTo'])
-                    ->subject('BÁO CÁO KHẨN CẤP');
-                    $message->from($array['mailFrom'],$array['title']);
+                        ->subject('BÁO CÁO KHẨN CẤP');
+                    $message->from($array['mailFrom'], $array['title']);
                 });
-                return response(['success'=>'Created successfull','request'=> $request->all()], $this->successStatus);
+                return response(['success' => 'Created successfull', 'request' => $request->all()], $this->successStatus);
             }
 
         }else{
-            $file = url('public/uploads/no-image.png');
-            $request->merge(['file' => $file]);
-            $urgent_reports= UrgentReport::create($request->except('name', 'case_number','birthday','gender','patient_department_id','patient_hospital_id'));
+            $urgent_reports= UrgentReport::create($request->except('file','name', 'case_number','birthday','gender','patient_department_id','patient_hospital_id'));
             if($urgent_reports){
                 $data = array('name'=>'Xin chào!', 'body' => 'Bạn vừa nhận được 01 email mới');
-                Mail::send('emails.mail', $data, function($message) use($array) {
+                Mail::send('emails.mail', $data, function($message) use($mailToArray) {
                     $message->to($array['mailTo'])
-                    ->subject('BÁO CÁO KHẨN CẤP');
+                        ->subject('BÁO CÁO KHẨN CẤP');
                     $message->from($array['mailFrom'], $array['title']);
                 });
-                return response(['success'=>'Created successfull','request'=> $request->all()],$this->successStatus);
+                return response(['success' => 'Created successfull', 'request' => $request->all()], $this->successStatus);
             }
         }
 
+    }
+
+     public function search(Request $request){
+        // if(isset($_POST['search'])){
+            $data = UrgentReport::where('frequence',$request->frequence)->where('title','LIKE','%'.$request->title.'%')->where('date_report',$request->date_report)->get();
+                return response()->json(['success'=> $data], $this->successStatus);
+            // if($request->ajax()){
+            //     $data = UrgentReport::where('frequence',$request->frequence)->where('title','LIKE','%'.$request->title.'%')->where('date_report',$request->date_report)->get();
+            //     return response()->json(['success'=> $data], $this->successStatus);
+            // }
+            // else{
+            //     dd('Can not search');
+            // }
     }
 }

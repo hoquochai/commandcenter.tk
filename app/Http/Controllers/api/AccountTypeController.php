@@ -9,7 +9,7 @@ class AccountTypeController extends Controller
 {
     public $successStatus = 200;
     public function index(){
-        $account_type = AccountType::all();
+        $account_type = AccountType::orderBy('id', 'DESC')->get();
         return response()->json(['data'=> $account_type], $this->successStatus);
     }
     public function show($id){

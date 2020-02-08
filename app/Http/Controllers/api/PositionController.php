@@ -10,7 +10,7 @@ class PositionController extends Controller
 {
     public $successStatus = 200;
     public function index(){
-        $position = Position::all();
+        $position = Position::orderBy('id', 'DESC')->get();
         return response()->json(['data'=> $position], $this->successStatus);
     }
     public function show($id){
