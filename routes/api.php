@@ -130,11 +130,14 @@ Route::group(['middleware' => 'auth:api'], function() {
         Route::get('/show/{id}', 'api\TrendReportController@show')
             ->name('show_trend_report')->middleware('cors');
     });
-});
 
     // Briefings
     Route::group(['prefix' => 'Briefings'], function(){
         Route::get('/', 'api\BriefingsController@index')
             ->name('index_briefings')->middleware('cors');
+        Route::post('/create', 'api\BriefingsController@store')
+            ->name('store_briefings')->middleware('cors');
+        Route::get('/show/{id}', 'api\BriefingsController@show')
+            ->name('show_briefings')->middleware('cors');
     });
 });

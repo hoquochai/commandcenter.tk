@@ -23,11 +23,7 @@ class CreateBriefingsTable extends Migration
             $table->foreign('hospitals_id')->references('id')->on('hospitals')->onDelete('cascade');
             $table->integer('report_types_id')->unsigned()->nullable();
             $table->foreign('report_types_id')->references('id')->on('report_types')->onDelete('cascade');
-            $table->string('date_trend_reports');
-            $table->string('date_urgent_report')->nullable();
-            $table->string('date_assaulted_staff')->nullable();
-            $table->string('date_complain')->nullable();
-            $table->string('date_labor_accident')->nullable();
+            $table->string('date_briefings');
             $table->string('title')->nullable();
             $table->integer('frequence')->nullable();
             $table->text('result');
