@@ -19,17 +19,18 @@ class TrendReportController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
+        $hospitalId = $user->hospitals_id;
 
         if ($user->isRole(User::ROLE_DIRECTOR)) {
-            $trendReports = TrendReport::with('user', 'receiver')->get();
+            $trendReports = $this->getListTrendReport($request, $hospitalId);
+
             foreach ($trendReports as $trendReport) {
-                $trendReport->result = json_decode($trendReport->result);
+                $trendReport->frequence = $trendReport->getFrequence();
             }
 
             return response()->json(['data'=> $trendReports], $this->successStatus);
         }
 
-        $hospitalId = $user->hospitals_id;
         $dateInputUrgentReport = $this->handleRequest($request, 'date_urgent_report');
         $dateInputAssaultedStaff = $this->handleRequest($request, 'date_assaulted_staff');
         $dateInputComplain = $this->handleRequest($request, 'date_complain');
@@ -37,6 +38,34 @@ class TrendReportController extends Controller
         $output = $this->handleOutput($hospitalId, $dateInputUrgentReport, $dateInputAssaultedStaff, $dateInputComplain, $dateInputLaborAccident);
 
         return response()->json(['data'=> $output], $this->successStatus);
+    }
+
+    /**
+     * @param Request $request
+     * @param $hospitalsId
+     * @return mixed
+     */
+    private function getListTrendReport(Request $request, $hospitalsId)
+    {
+        $searchData = $request->only(['key_word', 'from_date', 'to_date', 'frequence', 'report_types']);
+        $query = TrendReport::with('user', 'receiver', 'hospital', 'reportType')
+            ->where('hospitals_id', $hospitalsId);
+
+        if ($request->has('pageSize')) {
+            $limit = $request->get('pageSize');
+        } else {
+            $limit = config('settings.limit_pagination');
+        }
+
+        $trendReports = $this->handleSearch($searchData, $query, 'date_trend_reports')
+            ->orderBy('id', 'DESC')
+            ->paginate($limit);
+
+        foreach ($trendReports as $trendReport) {
+            $trendReport->result = json_decode($trendReport->result);
+        }
+
+        return $trendReports;
     }
 
     /**
@@ -122,7 +151,7 @@ class TrendReportController extends Controller
             $dateInputLaborAccident = $this->handleRequest($request, 'date_labor_accident');
             $output = $this->handleOutput($hospitalId, $dateInputUrgentReport, $dateInputAssaultedStaff, $dateInputComplain, $dateInputLaborAccident);
             TrendReport::create([
-                'date_trend_reports' => Carbon::now()->format('yy-m-d'),
+                'date_trend_reports' => $request->has('date_trend_reports') ? $request->get('date_trend_reports') : Carbon::now()->format('yy-m-d'),
                 'date_urgent_report' => $dateInputUrgentReport,
                 'date_assaulted_staff' => $dateInputAssaultedStaff,
                 'date_complain' => $dateInputComplain,
@@ -130,6 +159,10 @@ class TrendReportController extends Controller
                 'users_id' => $user->id,
                 'received_id' => $userReceiveId,
                 'result' => json_encode($output),
+                'title' => $request->get('title'),
+                'frequence' => $request->get('frequence'),
+                'hospitals_id' => $hospitalId,
+                'report_types_id' => $request->get('report_types_id'),
             ]);
 
             return response()->json(['data'=> 'Created successfully'], $this->successStatus);
@@ -150,8 +183,9 @@ class TrendReportController extends Controller
             return response()->json(['data'=> 'User does not have permission to access'], $this->permissionStatus);
         }
 
-        $trendReport = TrendReport::with('user', 'receiver')->where('id', $id)->first();
+        $trendReport = TrendReport::with('user', 'receiver', 'hospital', 'reportType')->where('id', $id)->first();
         $trendReport->result = json_decode($trendReport->result);
+        $trendReport->frequence = $trendReport->getFrequence();
 
         return response()->json(['data'=> $trendReport], $this->successStatus);
     }
