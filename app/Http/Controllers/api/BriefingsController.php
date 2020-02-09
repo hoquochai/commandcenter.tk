@@ -5,6 +5,7 @@ namespace App\Http\Controllers\api;
 use App\User;
 use App\models\Briefing;
 use App\models\Department;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -32,7 +33,7 @@ class BriefingsController extends Controller
             return response()->json(['data'=> $briefings], $this->successStatus);
         }
 
-        $departments = $this->getDepartments();
+        $departments = $this->getDepartments($request);
         return response()->json(['data'=> $departments], $this->successStatus);
     }
 
@@ -64,27 +65,71 @@ class BriefingsController extends Controller
         return $briefings;
     }
 
-    private function getDepartments()
+    /**
+     * @param Request $request
+     * @return mixed
+     */
+    private function getDepartments(Request $request)
     {
-        $departments = Department::withCount([
-            'bn_ngoai_tru_cu',
-            'bn_ngoai_tru_vao_vien',
-            'bn_ngoai_tru_ra_vien',
-            'bn_ngoai_tru_chuyen_den',
-            'bn_ngoai_tru_chuyen_vien',
-            'bn_ngoai_tru_chuyen_khoa',
+        $fromDate = null;
+        $toDate = null;
 
-            'bn_noi_tru_cu',
-            'bn_noi_tru_vao_vien',
-            'bn_noi_tru_ra_vien',
-            'bn_noi_tru_chuyen_den',
-            'bn_noi_tru_chuyen_vien',
-            'bn_noi_tru_chuyen_khoa',
+        if ($request->has('from_date')) {
+            $fromDate = Carbon::parse($request->get('from_date'))->toDateTimeString();
+        }
+        if ($request->has('to_date')) {
+            $toDate = Carbon::parse($request->get('to_date'))->toDateTimeString();
+        }
+
+        $departments = Department::withCount([
+            'bn_ngoai_tru_cu' => function ($query) use($fromDate, $toDate) {
+                $query->searchByDate($fromDate, $toDate);
+            },
+            'bn_ngoai_tru_cu_trong_vien' => function ($query) use($fromDate, $toDate) {
+                $query->searchByDate($fromDate, $toDate);
+            },
+            'bn_ngoai_tru_vao_vien' => function ($query) use($fromDate, $toDate) {
+                $query->searchByDate($fromDate, $toDate);
+            },
+            'bn_ngoai_tru_ra_vien' => function ($query) use($fromDate, $toDate) {
+                $query->searchByDate($fromDate, $toDate);
+            },
+            'bn_ngoai_tru_chuyen_den'=> function ($query) use($fromDate, $toDate) {
+                $query->searchByDate($fromDate, $toDate);
+            },
+            'bn_ngoai_tru_chuyen_vien' => function ($query) use($fromDate, $toDate) {
+                $query->searchByDate($fromDate, $toDate);
+            },
+            'bn_ngoai_tru_chuyen_khoa' => function ($query) use($fromDate, $toDate) {
+                $query->searchByDate($fromDate, $toDate);
+            },
+
+            'bn_noi_tru_cu' => function ($query) use($fromDate, $toDate) {
+                $query->searchByDate($fromDate, $toDate);
+            },
+            'bn_noi_tru_cu_trong_vien' => function ($query) use($fromDate, $toDate) {
+                $query->searchByDate($fromDate, $toDate);
+            },
+            'bn_noi_tru_vao_vien' => function ($query) use($fromDate, $toDate) {
+                $query->searchByDate($fromDate, $toDate);
+            },
+            'bn_noi_tru_ra_vien' => function ($query) use($fromDate, $toDate) {
+                $query->searchByDate($fromDate, $toDate);
+            },
+            'bn_noi_tru_chuyen_den'=> function ($query) use($fromDate, $toDate) {
+                $query->searchByDate($fromDate, $toDate);
+            },
+            'bn_noi_tru_chuyen_vien' => function ($query) use($fromDate, $toDate) {
+                $query->searchByDate($fromDate, $toDate);
+            },
+            'bn_noi_tru_chuyen_khoa' => function ($query) use($fromDate, $toDate) {
+                $query->searchByDate($fromDate, $toDate);
+            },
         ])->get();
 
         foreach ($departments as $department) {
-            $departments->bn_ngoai_tru_hien_co_count = $department->bn_ngoai_tru_cu_count + $department->bn_ngoai_tru_vao_vien_count;
-            $departments->bn_noi_tru_hien_co_count = $department->bn_noi_tru_cu_count + $department->bn_noi_tru_vao_vien_count;
+            $department->bn_ngoai_tru_hien_co_count = ($department->bn_ngoai_tru_cu_trong_vien_count + $department->bn_ngoai_tru_vao_vien_count) . '/' . ($department->bn_ngoai_tru_cu_trong_vien_count + $department->bn_ngoai_tru_ra_vien_count + $department->bn_ngoai_tru_vao_vien_count);
+            $department->bn_noi_tru_hien_co_count = $department->bn_noi_tru_cu_trong_vien_count + $department->bn_noi_tru_vao_vien_count . '/' . ($department->bn_noi_tru_cu_trong_vien_count + $department->bn_noi_tru_ra_vien_count + $department->bn_noi_tru_vao_vien_count);
         }
 
         return $departments;
@@ -112,7 +157,7 @@ class BriefingsController extends Controller
                 return response()->json(['data'=> 'User not found'], $this->exceptionStatus);
             }
 
-            $output = $this->getDepartments();
+            $output = $this->getDepartments($request);
             Briefing::create([
                 'date_briefings' => $request->has('date_briefings') ? $request->get('date_briefings') : Carbon::now()->format('yy-m-d'),
                 'users_id' => $user->id,
@@ -122,6 +167,8 @@ class BriefingsController extends Controller
                 'frequence' => $request->get('frequence'),
                 'hospitals_id' => $hospitalId,
                 'report_types_id' => $request->get('report_types_id'),
+                'from_date' => $request->has('from_date') ? $request->get('from_date') : null,
+                'to_date' => $request->has('to_date') ? $request->get('to_date') : null,
             ]);
 
             return response()->json(['data'=> 'Created successfully'], $this->successStatus);
@@ -132,9 +179,10 @@ class BriefingsController extends Controller
 
     /**
      * @param $id
+     * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function show($id)
+    public function show($id, Request $request)
     {
         $user = Auth::user();
 
@@ -145,6 +193,11 @@ class BriefingsController extends Controller
         $briefing = Briefing::with('user', 'receiver', 'hospital', 'reportType')->where('id', $id)->first();
         $briefing->result = json_decode($briefing->result);
         $briefing->frequence = $briefing->getFrequence();
+
+        if ($request->has('from_date') || $request->has('to_date')) {
+            $output = $this->getDepartments($request);
+            $briefing->result = $output;
+        }
 
         return response()->json(['data'=> $briefing], $this->successStatus);
     }
