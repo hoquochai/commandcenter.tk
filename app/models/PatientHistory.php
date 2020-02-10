@@ -35,6 +35,16 @@ class PatientHistory extends Model
         return $this->belongsTo(Department::class, 'p_department_id');
     }
 
+    public function changePatientTypes()
+    {
+        return $this->hasMany(ChangePatientType::class, 'department_id', 'department_id');
+    }
+
+    public function chuyen_den()
+    {
+        return $this->changePatientTypes()->whereNotNull('patient_from_hospital_id');
+    }
+
     public function scopeOutPatient($query)
     {
         return $query->where('is_inpatient', false);
@@ -43,5 +53,18 @@ class PatientHistory extends Model
     public function scopeBoarding($query)
     {
         return $query->where('is_inpatient', true);
+    }
+
+    public function scopeSearchByDate($query, $fromDate, $toDate)
+    {
+        if ($fromDate) {
+            return $query->whereDate('patient_histories.created_at', '>=', $fromDate);
+        }
+
+        if ($toDate) {
+            return $query->whereDate('patient_histories.created_at', '<=', $toDate);
+        }
+
+        return $query;
     }
 }

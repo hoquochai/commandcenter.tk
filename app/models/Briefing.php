@@ -13,7 +13,7 @@ class Briefing extends Model
 
     protected $fillable = [
         'date_briefings', 'title', 'frequence', 'hospitals_id',
-        'result', 'users_id', 'received_id', 'report_types_id'
+        'result', 'users_id', 'received_id', 'report_types_id', 'from_date', 'to_date'
     ];
 
     /**

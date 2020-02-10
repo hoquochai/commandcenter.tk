@@ -65,6 +65,41 @@ class Department extends Model
     }
 
     /**
+     * BN cũ trong viện
+     *
+     * @return HasMany
+     */
+    public function oldPatientsInHospital()
+    {
+        $query = $this->patientHistories();
+
+        return $query->where('time_go_in','<', Carbon::now()->format('yy-m-d'))
+            ->whereIn('patient_state', [
+                PatientHistory::TT_TRONG_VIEN,
+            ]);
+    }
+
+    /**
+     * BN nội trú cũ trong viện
+     *
+     * @return mixed
+     */
+    public function bn_noi_tru_cu_trong_vien()
+    {
+        return $this->oldPatientsInHospital()->boarding();
+    }
+
+    /**
+     * BN ngoai trú cũ trong viện
+     *
+     * @return mixed
+     */
+    public function bn_ngoai_tru_cu_trong_vien()
+    {
+        return $this->oldPatientsInHospital()->outPatient();
+    }
+
+    /**
      * BN vào viện
      *
      * @return HasMany
@@ -137,15 +172,26 @@ class Department extends Model
     }
 
     /**
+     * BN chuyển đến
+     *
+     * @return mixed
+     */
+    public function bn_chuyen_den()
+    {
+        $query = $this->patientHistories();
+
+        return $query->has('chuyen_den');
+    }
+
+    /**
      * BN nội trú chuyển đến
      *
      * @return HasMany
      */
     public function bn_noi_tru_chuyen_den()
     {
-        return $this->changePatientTypes()
-            ->has('patient.boarding')
-            ->whereNotNull('patient_from_hospital_id');
+        return $this->bn_chuyen_den()->boarding();
+
     }
 
     /**
@@ -155,9 +201,7 @@ class Department extends Model
      */
     public function bn_ngoai_tru_chuyen_den()
     {
-        return $this->changePatientTypes()
-            ->has('patient.outPatients')
-            ->whereNotNull('patient_from_hospital_id');
+        return $this->bn_chuyen_den()->outPatient();
     }
 
     /**
